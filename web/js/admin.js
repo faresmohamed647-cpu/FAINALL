@@ -83,8 +83,55 @@ const notificationsData = [
     { id: 3, title: 'Emergency: Bus Breakdown', type: 'emergency', recipients: 'Parents of Bus #15', sentDate: '2024-02-18 10:15:00', status: 'sent' },
     { id: 4, title: 'Monthly Fee Reminder', type: 'general', recipients: 'All Parents', sentDate: '2024-02-17 09:00:00', status: 'sent' },
     { id: 5, title: 'Weather Delay Notice', type: 'delay', recipients: 'Parents of Route C', sentDate: '2024-02-16 06:45:00', status: 'sent' },
-    { id: 6, title: 'New Safety Guidelines', type: 'general', recipients: 'All Users', sentDate: '2024-02-15 14:20:00', status: 'pending' }
+    { id: 6, title: 'New Safety Guidelines', type: 'general', recipients: 'All Users', sentDate: '2024-02-15 14:20:00', status: 'pending' },
+    { id: 7, title: 'Parent Message: Pickup Question', type: 'message', recipients: 'Admin Support', sentDate: '2024-02-19 11:05:00', status: 'sent', replyable: true, incomingMessage: 'Can my child be picked up 10 minutes later today?' },
+    { id: 8, title: 'Driver Message: Route Note', type: 'message', recipients: 'Admin Support', sentDate: '2024-02-19 11:22:00', status: 'sent', replyable: true, incomingMessage: 'Stop 3 is blocked due to roadwork. Please advise.' }
 ];
+
+const attendanceData = [
+    { id: 1, studentName: 'Ahmed Mohamed', busNumber: 'Bus #42', pickupStatus: 'picked', dropoffStatus: 'dropped', time: '07:40 AM' },
+    { id: 2, studentName: 'Fatima Ali', busNumber: 'Bus #15', pickupStatus: 'pending', dropoffStatus: 'pending', time: '07:48 AM' },
+    { id: 3, studentName: 'Omar Khaled', busNumber: 'Bus #28', pickupStatus: 'picked', dropoffStatus: 'pending', time: '07:52 AM' },
+    { id: 4, studentName: 'Aya Samir', busNumber: 'Bus #33', pickupStatus: 'missed', dropoffStatus: 'missed', time: '07:55 AM' },
+    { id: 5, studentName: 'Nour Mostafa', busNumber: 'Bus #07', pickupStatus: 'picked', dropoffStatus: 'dropped', time: '08:05 AM' }
+];
+
+const paymentsData = [
+    { id: 1, parentName: 'Mohamed Hassan', student: 'Ahmed Mohamed', amount: 1200, status: 'paid', date: '2024-02-18' },
+    { id: 2, parentName: 'Fatima Ali', student: 'Nour Mostafa', amount: 900, status: 'pending', date: '2024-02-19' },
+    { id: 3, parentName: 'Sarah Ahmed', student: 'Aya Samir', amount: 1100, status: 'overdue', date: '2024-02-10' },
+    { id: 4, parentName: 'Hana Mostafa', student: 'Karim Hassan', amount: 950, status: 'paid', date: '2024-02-17' }
+];
+
+const busOccupancyData = [
+    { busNumber: 'Bus #42', currentStudents: 38 },
+    { busNumber: 'Bus #15', currentStudents: 40 },
+    { busNumber: 'Bus #28', currentStudents: 42 },
+    { busNumber: 'Bus #33', currentStudents: 48 },
+    { busNumber: 'Bus #07', currentStudents: 36 },
+    { busNumber: 'Bus #19', currentStudents: 44 },
+    { busNumber: 'Bus #51', currentStudents: 28 },
+    { busNumber: 'Bus #12', currentStudents: 41 },
+    { busNumber: 'Bus #44', currentStudents: 50 },
+    { busNumber: 'Bus #23', currentStudents: 39 }
+];
+
+const emergencyAlertsData = [
+    { id: 1, type: 'breakdown', busNumber: 'Bus #15', driver: 'Mohamed Ali', location: 'Fleming St, Alexandria', time: '08:12 AM' },
+    { id: 2, type: 'delay', busNumber: 'Bus #42', driver: 'Ahmed Khaled', location: 'Sidi Gaber, Alexandria', time: '08:20 AM' },
+    { id: 3, type: 'medical', busNumber: 'Bus #33', driver: 'Omar Samir', location: 'Roushdy, Alexandria', time: '08:32 AM' },
+    { id: 4, type: 'accident', busNumber: 'Bus #28', driver: 'Youssef Hassan', location: 'Stanley Bridge', time: '08:45 AM' }
+];
+
+const emergencyLogsData = [
+    { id: 1, bus: 'Bus #15', driver: 'Mohamed Ali', location: 'Fleming St, Alexandria', type: 'breakdown', time: '2024-02-19 08:12:00', notes: 'Engine overheating, awaiting support.' },
+    { id: 2, bus: 'Bus #42', driver: 'Ahmed Khaled', location: 'Sidi Gaber, Alexandria', type: 'delay', time: '2024-02-19 08:20:00', notes: 'Traffic congestion near bridge.' },
+    { id: 3, bus: 'Bus #33', driver: 'Omar Samir', location: 'Roushdy, Alexandria', type: 'medical', time: '2024-02-19 08:32:00', notes: 'Student felt dizzy, requested nurse.' },
+    { id: 4, bus: 'Bus #28', driver: 'Youssef Hassan', location: 'Stanley Bridge', type: 'accident', time: '2024-02-19 08:45:00', notes: 'Minor collision, no injuries.' }
+];
+
+const ATTENDANCE_STORAGE_KEY = 'driver_attendance_events';
+const attendanceEventsData = [];
 
 const complaintsData = [
     { id: 1, complaintId: 'CMP001', submittedBy: 'Sarah Ahmed', type: 'service', subject: 'Late bus pickup', priority: 'medium', status: 'resolved', date: '2024-02-18' },
@@ -132,7 +179,9 @@ const menuToggle = document.getElementById('menuToggle');
 const sidebar = document.querySelector('.sidebar');
 const themeToggleBtn = document.getElementById('themeToggle');
 const globalSearchInput = document.querySelector('.search-box input');
+const globalSearchResults = document.getElementById('globalSearchResults');
 const THEME_STORAGE_KEY = 'safestep-theme';
+const BROADCAST_STORAGE_KEY = 'safestep-broadcasts';
 const MOBILE_BREAKPOINT = 768;
 const sidebarOverlay = document.createElement('div');
 sidebarOverlay.className = 'sidebar-overlay';
@@ -222,6 +271,29 @@ function normalizeSearchText(value) {
     return String(value || '').toLowerCase().trim();
 }
 
+function clearSearchHighlights(root) {
+    if (!root) return;
+    root.querySelectorAll('mark.search-highlight').forEach(mark => {
+        const textNode = document.createTextNode(mark.textContent || '');
+        mark.replaceWith(textNode);
+    });
+}
+
+function highlightSearchMatches(root, queryText) {
+    if (!root) return;
+    clearSearchHighlights(root);
+    const query = String(queryText || '').trim();
+    if (!query) return;
+    const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+
+    root.querySelectorAll('td, p, span').forEach(el => {
+        if (el.children.length) return;
+        const text = el.textContent;
+        if (!text || !regex.test(text)) return;
+        el.innerHTML = text.replace(regex, match => `<mark class="search-highlight">${match}</mark>`);
+    });
+}
+
 function applyGlobalSearch(queryText = '') {
     const activePage = document.querySelector('.page.active');
     if (!activePage) return;
@@ -235,6 +307,7 @@ function applyGlobalSearch(queryText = '') {
             const rowText = normalizeSearchText(row.textContent);
             row.style.display = !query || rowText.includes(query) ? '' : 'none';
         });
+        highlightSearchMatches(activePage, queryText);
         return;
     }
 
@@ -253,11 +326,93 @@ function applyGlobalSearch(queryText = '') {
         const blockText = normalizeSearchText(block.textContent);
         block.style.display = !query || blockText.includes(query) ? '' : 'none';
     });
+
+    highlightSearchMatches(activePage, queryText);
 }
 
 function reapplyGlobalSearch() {
     applyGlobalSearch(globalSearchInput ? globalSearchInput.value : '');
+    applyAllTableEnhancements();
 }
+
+function getGlobalSearchMatches(query) {
+    const normalized = normalizeSearchText(query);
+    if (!normalized) return [];
+
+    const matches = [];
+
+    parentsData.forEach(parent => {
+        const text = normalizeSearchText(`${parent.name} ${parent.email} ${parent.phone}`);
+        if (text.includes(normalized)) {
+            matches.push({ label: parent.name, meta: 'Parent', pageId: 'parents' });
+        }
+    });
+
+    driversData.forEach(driver => {
+        const text = normalizeSearchText(`${driver.name} ${driver.phone} ${driver.license}`);
+        if (text.includes(normalized)) {
+            matches.push({ label: driver.name, meta: 'Driver', pageId: 'drivers' });
+        }
+    });
+
+    studentsData.forEach(student => {
+        const text = normalizeSearchText(`${student.name} ${student.school} ${student.parent}`);
+        if (text.includes(normalized)) {
+            matches.push({ label: student.name, meta: 'Student', pageId: 'students' });
+        }
+    });
+
+    busesData.forEach(bus => {
+        const text = normalizeSearchText(`${bus.busNumber} ${bus.plate} ${bus.driver} ${bus.route}`);
+        if (text.includes(normalized)) {
+            matches.push({ label: bus.busNumber, meta: 'Bus', pageId: 'buses' });
+        }
+    });
+
+    return matches.slice(0, 6);
+}
+
+function renderGlobalSearchResults(query) {
+    if (!globalSearchResults) return;
+    const results = getGlobalSearchMatches(query);
+    if (!query || results.length === 0) {
+        globalSearchResults.classList.remove('active');
+        globalSearchResults.innerHTML = '';
+        return;
+    }
+
+    globalSearchResults.innerHTML = results
+        .map(item => `
+            <div class="search-result-item" data-page="${item.pageId}" data-label="${item.label}">
+                <span>${item.label}</span>
+                <small>${item.meta}</small>
+            </div>
+        `)
+        .join('');
+    globalSearchResults.classList.add('active');
+}
+
+document.addEventListener('click', (event) => {
+    if (!globalSearchResults) return;
+    const resultItem = event.target.closest('.search-result-item');
+    if (resultItem) {
+        const pageId = resultItem.getAttribute('data-page');
+        const label = resultItem.getAttribute('data-label');
+        if (pageId) {
+            navigateTo(pageId);
+            if (globalSearchInput) {
+                globalSearchInput.value = label;
+                applyGlobalSearch(label);
+            }
+        }
+        globalSearchResults.classList.remove('active');
+        return;
+    }
+
+    if (!event.target.closest('.search-box')) {
+        globalSearchResults.classList.remove('active');
+    }
+});
 
 function matchesPeriod(dateString, period) {
     if (period === 'all') return true;
@@ -291,8 +446,18 @@ function initSelectFilters() {
         { id: 'studentStatusFilter', render: renderStudents },
         { id: 'tripStatusFilter', render: renderTrips },
         { id: 'tripDateFilter', render: renderTrips, event: 'input' },
+        { id: 'attendancePickupFilter', render: renderAttendance },
+        { id: 'attendanceDropoffFilter', render: renderAttendance },
         { id: 'notificationTypeFilter', render: renderNotifications },
         { id: 'notificationStatusFilter', render: renderNotifications },
+        { id: 'emergencyLogDateFilter', render: renderEmergencyLogs, event: 'input' },
+        { id: 'emergencyLogBusFilter', render: renderEmergencyLogs },
+        { id: 'emergencyLogDriverFilter', render: renderEmergencyLogs },
+        { id: 'emergencyLogTypeFilter', render: renderEmergencyLogs },
+        { id: 'paymentStatusFilter', render: renderPayments },
+        { id: 'paymentPeriodFilter', render: renderPayments },
+        { id: 'capacityStatusFilter', render: renderBusCapacity },
+        { id: 'emergencyTypeFilter', render: renderEmergencyAlerts },
         { id: 'complaintTypeFilter', render: renderComplaints },
         { id: 'complaintStatusFilter', render: renderComplaints },
         { id: 'schoolTypeFilter', render: renderSchools },
@@ -317,11 +482,335 @@ function initSelectFilters() {
 function initGlobalSearch() {
     if (!globalSearchInput) return;
     globalSearchInput.addEventListener('input', (event) => {
-        applyGlobalSearch(event.target.value);
+        const query = event.target.value;
+        applyGlobalSearch(query);
+        applyAllTableEnhancements();
+        renderGlobalSearchResults(query);
     });
 }
 
 initGlobalSearch();
+
+function getFieldErrorEl(field) {
+    const wrapper = field.closest('.filter-item, .form-group, .form-control') || field.parentElement;
+    if (!wrapper) return null;
+    let error = wrapper.querySelector('.error-text');
+    if (!error) {
+        error = document.createElement('div');
+        error.className = 'error-text';
+        wrapper.appendChild(error);
+    }
+    return error;
+}
+
+function validateField(field) {
+    if (!field) return true;
+    const value = String(field.value || '').trim();
+    const isRequired = field.hasAttribute('required');
+    const isEmail = field.type === 'email' || /email/i.test(field.id || '');
+    const isPhone = field.type === 'tel' || /phone/i.test(field.id || '');
+    let errorMessage = '';
+
+    if (isRequired && !value) {
+        errorMessage = 'This field is required.';
+    } else if (isEmail && value) {
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        if (!emailOk) errorMessage = 'Enter a valid email.';
+    } else if (isPhone && value) {
+        const phoneOk = /^[+()0-9\s-]{7,}$/.test(value);
+        if (!phoneOk) errorMessage = 'Enter a valid phone number.';
+    }
+
+    const errorEl = getFieldErrorEl(field);
+    if (errorEl) {
+        errorEl.textContent = errorMessage;
+    }
+    field.classList.toggle('field-error', Boolean(errorMessage));
+    return !errorMessage;
+}
+
+function validateForm(form) {
+    if (!form) return true;
+    const fields = Array.from(form.querySelectorAll('input, textarea, select'));
+    const results = fields.map(field => validateField(field));
+    return results.every(Boolean);
+}
+
+function initFormValidation() {
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', (event) => {
+            if (!validateForm(form)) {
+                event.preventDefault();
+                showToast('Please fix form errors before submitting.', 'warning');
+            }
+        });
+        form.querySelectorAll('input, textarea, select').forEach(field => {
+            field.addEventListener('blur', () => validateField(field));
+            field.addEventListener('input', () => validateField(field));
+        });
+    });
+}
+
+initFormValidation();
+
+function updateStatValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
+function updateDashboardStats() {
+    updateStatValue('totalParentsStat', parentsData.length);
+    updateStatValue('totalDriversStat', driversData.length);
+    updateStatValue('totalStudentsStat', studentsData.length);
+    updateStatValue('totalBusesStat', busesData.length);
+
+    const activeBuses = busesData.filter(bus => bus.status === 'active').length;
+    updateStatValue('activeBusesStat', activeBuses);
+
+    const activeTrips = tripsData.filter(trip => trip.status === 'in-progress').length;
+    updateStatValue('activeTripsStat', activeTrips);
+
+    const pendingRequests = getNormalizedRequests().filter(req => req.status === 'new').length;
+    updateStatValue('pendingRequestsStat', pendingRequests);
+
+    const complaintsToday = complaintsData.filter(c => c.date === new Date().toISOString().split('T')[0]).length;
+    updateStatValue('complaintsTodayStat', complaintsToday);
+
+    const todayTrips = tripsData.filter(trip => trip.status === 'completed' || trip.status === 'in-progress').length;
+    updateStatValue('todayTripsStat', todayTrips);
+}
+
+function updateNotificationBadge() {
+    const badge = document.querySelector('.notification-icon .badge');
+    if (!badge) return;
+    const count = notificationsData.length;
+    badge.textContent = count > 99 ? '99+' : String(count);
+}
+
+function playNotificationSound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 880;
+        gain.gain.value = 0.05;
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + 0.15);
+    } catch {
+        // Audio not supported
+    }
+}
+
+function simulateRealtimeUpdates() {
+    liveTrackingData.forEach(bus => {
+        const coords = parseCoordinates(bus.currentLocation);
+        if (!coords) return;
+        const lat = (coords.lat + (Math.random() - 0.5) * 0.0015).toFixed(4);
+        const lng = (coords.lng + (Math.random() - 0.5) * 0.0015).toFixed(4);
+        bus.currentLocation = `${lat}, ${lng}`;
+        bus.speed = `${Math.max(0, Math.round(20 + Math.random() * 30))} km/h`;
+        bus.lastUpdate = new Date().toLocaleTimeString();
+        bus.status = Math.random() > 0.15 ? 'moving' : 'stopped';
+    });
+
+    if (Math.random() > 0.6) {
+        notificationsData.unshift({
+            id: Date.now(),
+            title: 'System Update',
+            type: 'general',
+            recipients: 'All Users',
+            sentDate: new Date().toLocaleString(),
+            status: 'sent'
+        });
+        updateNotificationBadge();
+        showToast('New system notification received.', 'info');
+        playNotificationSound();
+    }
+
+    if (Math.random() > 0.75) {
+        const newAlert = {
+            id: Date.now(),
+            type: 'delay',
+            busNumber: 'Bus #42',
+            driver: 'Ahmed Khaled',
+            location: 'Sporting, Alexandria',
+            time: new Date().toLocaleTimeString()
+        };
+        emergencyAlertsData.unshift(newAlert);
+        emergencyLogsData.unshift({
+            id: newAlert.id,
+            bus: newAlert.busNumber,
+            driver: newAlert.driver,
+            location: newAlert.location,
+            type: newAlert.type,
+            time: new Date().toISOString().replace('T', ' ').slice(0, 19),
+            notes: 'Auto-generated alert from tracking system.'
+        });
+    }
+
+    updateDashboardStats();
+
+    const activePageId = document.querySelector('.page.active')?.id;
+    if (activePageId === 'live-tracking') renderLiveTracking();
+    if (activePageId === 'notifications') {
+        renderNotifications();
+        renderEmergencyAlerts();
+    }
+    if (activePageId === 'emergency-logs') renderEmergencyLogs();
+    if (activePageId === 'students') renderAttendanceRealtime();
+}
+
+setInterval(simulateRealtimeUpdates, 15000);
+
+const tableStates = new Map();
+let tableEnhancementsInitialized = false;
+
+function getTableState(table) {
+    if (!tableStates.has(table)) {
+        tableStates.set(table, { page: 1, pageSize: 5, sortIndex: -1, sortDir: 'asc' });
+    }
+    return tableStates.get(table);
+}
+
+function ensurePaginationControls(table) {
+    const wrapper = table.closest('.table-wrapper');
+    if (!wrapper) return null;
+    let controls = wrapper.nextElementSibling;
+    if (!controls || !controls.classList.contains('table-pagination')) {
+        controls = document.createElement('div');
+        controls.className = 'table-pagination';
+        controls.innerHTML = `
+            <button class="btn-secondary btn-compact" type="button" data-page="prev">
+                <i class="fas fa-chevron-left"></i> Prev
+            </button>
+            <span class="page-info">Page 1 of 1</span>
+            <button class="btn-secondary btn-compact" type="button" data-page="next">
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+            <select class="form-control page-size">
+                <option value="5">5 / page</option>
+                <option value="10">10 / page</option>
+                <option value="20">20 / page</option>
+            </select>
+        `;
+        wrapper.insertAdjacentElement('afterend', controls);
+    }
+    controls.setAttribute('data-table-id', table.id || '');
+    return controls;
+}
+
+function applyTableEnhancements(table) {
+    if (!table || !table.tBodies || !table.tBodies[0]) return;
+    if (!table.id) {
+        table.id = `table-${Math.random().toString(36).slice(2, 8)}`;
+    }
+    const state = getTableState(table);
+    const tbody = table.tBodies[0];
+    const headers = Array.from(table.querySelectorAll('thead th'));
+
+    headers.forEach((th, index) => {
+        if (th.dataset.noSort === 'true') return;
+        if (/actions|reply/i.test(th.textContent || '')) {
+            th.dataset.noSort = 'true';
+            return;
+        }
+        th.classList.add('sortable');
+        th.classList.toggle('sorted-asc', state.sortIndex === index && state.sortDir === 'asc');
+        th.classList.toggle('sorted-desc', state.sortIndex === index && state.sortDir === 'desc');
+    });
+
+    const rows = Array.from(tbody.rows);
+    if (state.sortIndex >= 0) {
+        rows.sort((a, b) => {
+            const aText = (a.cells[state.sortIndex]?.textContent || '').trim().toLowerCase();
+            const bText = (b.cells[state.sortIndex]?.textContent || '').trim().toLowerCase();
+            if (aText === bText) return 0;
+            return state.sortDir === 'asc' ? aText.localeCompare(bText) : bText.localeCompare(aText);
+        });
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    const visibleRows = rows.filter(row => row.style.display !== 'none');
+    const totalPages = Math.max(1, Math.ceil(visibleRows.length / state.pageSize));
+    if (state.page > totalPages) state.page = totalPages;
+
+    visibleRows.forEach((row, idx) => {
+        const start = (state.page - 1) * state.pageSize;
+        const end = state.page * state.pageSize;
+        row.style.display = idx >= start && idx < end ? '' : 'none';
+    });
+
+    const controls = ensurePaginationControls(table);
+    if (controls) {
+        const info = controls.querySelector('.page-info');
+        const prevBtn = controls.querySelector('[data-page="prev"]');
+        const nextBtn = controls.querySelector('[data-page="next"]');
+        const pageSizeSelect = controls.querySelector('.page-size');
+        if (info) info.textContent = `Page ${state.page} of ${totalPages}`;
+        if (prevBtn) prevBtn.disabled = state.page <= 1;
+        if (nextBtn) nextBtn.disabled = state.page >= totalPages;
+        if (pageSizeSelect) pageSizeSelect.value = String(state.pageSize);
+    }
+}
+
+function applyAllTableEnhancements() {
+    const activePage = document.querySelector('.page.active');
+    if (!activePage) return;
+    activePage.querySelectorAll('.data-table').forEach(applyTableEnhancements);
+}
+
+function initTableEnhancements() {
+    if (tableEnhancementsInitialized) return;
+
+    document.addEventListener('click', (event) => {
+        const th = event.target.closest('th');
+        if (th && th.closest('.data-table') && th.dataset.noSort !== 'true') {
+            const table = th.closest('.data-table');
+            const headers = Array.from(table.querySelectorAll('thead th'));
+            const index = headers.indexOf(th);
+            if (index >= 0) {
+                const state = getTableState(table);
+                state.sortDir = state.sortIndex === index && state.sortDir === 'asc' ? 'desc' : 'asc';
+                state.sortIndex = index;
+                state.page = 1;
+                applyTableEnhancements(table);
+            }
+        }
+
+        const pageBtn = event.target.closest('.table-pagination button');
+        if (pageBtn) {
+            const controls = pageBtn.closest('.table-pagination');
+            const tableId = controls?.getAttribute('data-table-id');
+            const table = tableId ? document.getElementById(tableId) : null;
+            if (!table) return;
+            const state = getTableState(table);
+            const direction = pageBtn.getAttribute('data-page');
+            if (direction === 'prev') state.page = Math.max(1, state.page - 1);
+            if (direction === 'next') state.page = state.page + 1;
+            applyTableEnhancements(table);
+        }
+    });
+
+    document.addEventListener('change', (event) => {
+        const sizeSelect = event.target.closest('.table-pagination .page-size');
+        if (!sizeSelect) return;
+        const controls = sizeSelect.closest('.table-pagination');
+        const tableId = controls?.getAttribute('data-table-id');
+        const table = tableId ? document.getElementById(tableId) : null;
+        if (!table) return;
+        const state = getTableState(table);
+        state.pageSize = Number(sizeSelect.value) || 5;
+        state.page = 1;
+        applyTableEnhancements(table);
+    });
+
+    tableEnhancementsInitialized = true;
+}
+
+initTableEnhancements();
 
 // Sidebar toggle functionality
 const mainContent = document.querySelector('.main-content');
@@ -382,10 +871,6 @@ navLinks.forEach(link => {
             renderBuses();
         } else if (pageId === 'requests') {
             renderRequests();
-        } else if (pageId === 'parent-new-requests') {
-            renderNewParentRequests();
-        } else if (pageId === 'driver-new-requests') {
-            renderNewDriverRequests();
         } else if (pageId === 'financials') {
             renderFinancials();
         } else if (pageId === 'maintenance') {
@@ -409,6 +894,10 @@ navLinks.forEach(link => {
         } else if (pageId === 'activity-logs') {
             renderActivityLogs();
             initStudentQrTools();
+        } else if (pageId === 'emergency-logs') {
+            renderEmergencyLogs();
+        } else if (pageId === 'students') {
+            renderAttendanceRealtime();
         }
         
         if (isMobileView()) setSidebarState(false);
@@ -443,18 +932,24 @@ document.addEventListener('DOMContentLoaded', () => {
     renderParents();
     renderDrivers();
     renderRequests();
-    renderNewParentRequests();
-    renderNewDriverRequests();
     renderFinancials();
     renderMaintenance();
     renderLiveTracking();
     renderStudents();
+    renderAttendance();
+    renderAttendanceRealtime();
     renderTrips();
     renderNotifications();
+    renderEmergencyAlerts();
+    renderEmergencyLogs();
     renderComplaints();
     renderSchools();
     renderUsers();
     renderActivityLogs();
+    renderPayments();
+    renderBusCapacity();
+    updateDashboardStats();
+    updateNotificationBadge();
     initSelectFilters();
     initStudentQrTools();
 
@@ -733,6 +1228,10 @@ function renderMaintenance() {
 
 let selectedTrackingBusId = null;
 let trackingListenersBound = false;
+let trackingMapInstance = null;
+let trackingMapMarkers = new Map();
+let trackingRouteLine = null;
+let trackingStopsLayer = null;
 
 function parseCoordinates(locationText) {
     if (!locationText || typeof locationText !== 'string' || !locationText.includes(',')) return null;
@@ -741,6 +1240,80 @@ function parseCoordinates(locationText) {
     const lng = Number(lngText);
     if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
     return { lat, lng };
+}
+
+function setLoadingState(targetId, isLoading) {
+    const element = document.getElementById(targetId);
+    const wrapper = element?.closest('.table-wrapper') || element?.closest('.tracking-map');
+    if (!wrapper) return;
+    wrapper.classList.toggle('is-loading', isLoading);
+}
+
+function renderEmptyRow(tbody, colspan, message) {
+    if (!tbody) return;
+    tbody.innerHTML = `
+        <tr class="empty-row">
+            <td colspan="${colspan}">${message || 'No data available.'}</td>
+        </tr>
+    `;
+}
+
+function initTrackingMap(center) {
+    if (!window.L || trackingMapInstance) return;
+    const mapContainer = document.getElementById('liveTrackingMap');
+    if (!mapContainer) return;
+    trackingMapInstance = L.map(mapContainer, { zoomControl: false }).setView(center, 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(trackingMapInstance);
+    L.control.zoom({ position: 'bottomright' }).addTo(trackingMapInstance);
+}
+
+function buildRouteStops(selectedBus) {
+    if (!selectedBus?.lat || !selectedBus?.lng) return [];
+    const baseLat = selectedBus.lat;
+    const baseLng = selectedBus.lng;
+    return [
+        { name: 'School', lat: baseLat + 0.005, lng: baseLng - 0.003 },
+        { name: 'Stop 1', lat: baseLat + 0.002, lng: baseLng + 0.002 },
+        { name: 'Stop 2', lat: baseLat - 0.002, lng: baseLng + 0.004 },
+        { name: 'Stop 3', lat: baseLat - 0.004, lng: baseLng - 0.001 }
+    ];
+}
+
+function updateTrackingMap(selectedBus, filteredBuses) {
+    if (!selectedBus || !selectedBus.hasGps) return;
+    initTrackingMap([selectedBus.lat, selectedBus.lng]);
+    if (!trackingMapInstance) return;
+
+    filteredBuses.forEach(bus => {
+        if (!bus.hasGps) return;
+        const existing = trackingMapMarkers.get(bus.id);
+        const markerLabel = `<strong>${bus.busNumber}</strong><br>${bus.route}<br>${bus.driver}`;
+        if (existing) {
+            existing.setLatLng([bus.lat, bus.lng]).bindPopup(markerLabel);
+        } else {
+            const marker = L.marker([bus.lat, bus.lng]).addTo(trackingMapInstance).bindPopup(markerLabel);
+            trackingMapMarkers.set(bus.id, marker);
+        }
+    });
+
+    trackingMapInstance.setView([selectedBus.lat, selectedBus.lng], 14, { animate: true });
+
+    if (trackingRouteLine) {
+        trackingRouteLine.remove();
+        trackingRouteLine = null;
+    }
+    if (trackingStopsLayer) {
+        trackingStopsLayer.remove();
+        trackingStopsLayer = null;
+    }
+
+    const stops = buildRouteStops(selectedBus);
+    const routeCoords = [[selectedBus.lat, selectedBus.lng], ...stops.map(s => [s.lat, s.lng])];
+    trackingRouteLine = L.polyline(routeCoords, { color: '#2563eb', weight: 4, dashArray: '6 6' }).addTo(trackingMapInstance);
+    trackingStopsLayer = L.layerGroup(stops.map(stop =>
+        L.circleMarker([stop.lat, stop.lng], { radius: 6, color: '#10b981', fillColor: '#10b981', fillOpacity: 0.9 })
+            .bindPopup(`<strong>${stop.name}</strong>`)
+    )).addTo(trackingMapInstance);
 }
 
 function buildRegisteredTrackingData() {
@@ -806,8 +1379,19 @@ function renderTrackingMapPanel(filteredBuses) {
     if (!mapContent) return;
 
     if (filteredBuses.length === 0) {
+        if (trackingMapInstance) {
+            trackingMapInstance.remove();
+            trackingMapInstance = null;
+            trackingMapMarkers.clear();
+        }
         mapContent.innerHTML = '<div class="tracking-empty"><p>No buses match current filters.</p></div>';
         return;
+    }
+
+    if (trackingMapInstance) {
+        trackingMapInstance.remove();
+        trackingMapInstance = null;
+        trackingMapMarkers.clear();
     }
 
     const selectedBus = filteredBuses.find(bus => bus.id === selectedTrackingBusId) || filteredBuses[0];
@@ -824,34 +1408,47 @@ function renderTrackingMapPanel(filteredBuses) {
     const mapLink = selectedBus.hasGps
         ? `https://www.google.com/maps?q=${selectedBus.lat},${selectedBus.lng}`
         : '#';
+    const stops = buildRouteStops(selectedBus);
+    const stopsMarkup = stops.length
+        ? stops.map(stop => `<span class="tracking-stop">${stop.name}</span>`).join('')
+        : '<span class="tracking-stop">No stops available</span>';
 
     mapContent.innerHTML = `
         <div class="tracking-bus-list">
             ${busButtons}
         </div>
-        <div class="tracking-gps-card">
-            <div class="tracking-gps-header">
-                <h3>${selectedBus.busNumber} GPS</h3>
-                <span class="status-badge ${selectedBus.status}">${statusText}</span>
+        <div class="tracking-details">
+            <div class="tracking-map-canvas" id="liveTrackingMap"></div>
+            <div class="tracking-stops">${stopsMarkup}</div>
+            <div class="tracking-route-hint">
+                Suggested: ${selectedBus.route} optimized for pickup density. Best route saves ~6 minutes.
             </div>
-            <div class="tracking-gps-meta">
-                <div class="meta-item"><label>Route</label><strong>${selectedBus.route}</strong></div>
-                <div class="meta-item"><label>Driver</label><strong>${selectedBus.driver}</strong></div>
-                <div class="meta-item"><label>Current Coordinates</label><strong>${selectedBus.currentLocation}</strong></div>
-                <div class="meta-item"><label>Speed</label><strong>${selectedBus.speed}</strong></div>
-                <div class="meta-item"><label>Last Update</label><strong>${selectedBus.lastUpdate}</strong></div>
-                <div class="meta-item"><label>GPS Signal</label><strong>${selectedBus.hasGps ? 'Available' : 'No Signal'}</strong></div>
-            </div>
-            <div class="tracking-gps-actions">
-                <button class="btn-secondary" type="button" onclick="trackBus(${selectedBus.id})">
-                    <i class="fas fa-route"></i> Track This Bus
-                </button>
-                <a class="btn-primary ${selectedBus.hasGps ? '' : 'disabled'}" href="${mapLink}" ${selectedBus.hasGps ? 'target="_blank" rel="noopener noreferrer"' : 'onclick="return false;"'}>
-                    <i class="fas fa-map-marked-alt"></i> Open GPS Map
-                </a>
+            <div class="tracking-gps-card">
+                <div class="tracking-gps-header">
+                    <h3>${selectedBus.busNumber} GPS</h3>
+                    <span class="status-badge ${selectedBus.status}">${statusText}</span>
+                </div>
+                <div class="tracking-gps-meta">
+                    <div class="meta-item"><label>Route</label><strong>${selectedBus.route}</strong></div>
+                    <div class="meta-item"><label>Driver</label><strong>${selectedBus.driver}</strong></div>
+                    <div class="meta-item"><label>Current Coordinates</label><strong>${selectedBus.currentLocation}</strong></div>
+                    <div class="meta-item"><label>Speed</label><strong>${selectedBus.speed}</strong></div>
+                    <div class="meta-item"><label>Last Update</label><strong>${selectedBus.lastUpdate}</strong></div>
+                    <div class="meta-item"><label>GPS Signal</label><strong>${selectedBus.hasGps ? 'Available' : 'No Signal'}</strong></div>
+                </div>
+                <div class="tracking-gps-actions">
+                    <button class="btn-secondary" type="button" onclick="trackBus(${selectedBus.id})">
+                        <i class="fas fa-route"></i> Track This Bus
+                    </button>
+                    <a class="btn-primary ${selectedBus.hasGps ? '' : 'disabled'}" href="${mapLink}" ${selectedBus.hasGps ? 'target=\"_blank\" rel=\"noopener noreferrer\"' : 'onclick=\"return false;\"'}>
+                        <i class="fas fa-map-marked-alt"></i> Open GPS Map
+                    </a>
+                </div>
             </div>
         </div>
     `;
+
+    setTimeout(() => updateTrackingMap(selectedBus, filteredBuses), 0);
 }
 
 function renderLiveTracking() {
@@ -860,6 +1457,8 @@ function renderLiveTracking() {
         console.error('Tracking table tbody not found');
         return;
     }
+    setLoadingState('trackingTable', true);
+    setLoadingState('trackingMapContent', true);
 
     const allBuses = buildRegisteredTrackingData();
     populateTrackingFilters(allBuses);
@@ -879,6 +1478,9 @@ function renderLiveTracking() {
     }
 
     tbody.innerHTML = '';
+    if (filteredBuses.length === 0) {
+        renderEmptyRow(tbody, 7, 'No buses match current filters.');
+    }
     filteredBuses.forEach(busItem => {
         const statusText = busItem.status.charAt(0).toUpperCase() + busItem.status.slice(1);
         const tr = document.createElement('tr');
@@ -910,6 +1512,10 @@ function renderLiveTracking() {
 
     renderTrackingMapPanel(filteredBuses);
     reapplyGlobalSearch();
+    setTimeout(() => {
+        setLoadingState('trackingTable', false);
+        setLoadingState('trackingMapContent', false);
+    }, 300);
 }
 
 function renderStudents() {
@@ -1023,6 +1629,7 @@ function renderNotifications() {
         console.error('Notifications table tbody not found');
         return;
     }
+    setLoadingState('notificationsTable', true);
     const typeFilter = document.getElementById('notificationTypeFilter')?.value || 'all';
     const statusFilter = document.getElementById('notificationStatusFilter')?.value || 'all';
     const filteredData = notificationsData
@@ -1030,22 +1637,40 @@ function renderNotifications() {
         .filter(notification => statusFilter === 'all' || notification.status === statusFilter);
 
     tbody.innerHTML = '';
+    if (filteredData.length === 0) {
+        renderEmptyRow(tbody, 7, 'No notifications found.');
+    }
     filteredData.forEach(notification => {
         const tr = document.createElement('tr');
+        const replyMessage = notification.incomingMessage || notification.message || notification.title || 'Message';
+        const replyCell = `
+            <div class="reply-cell">
+                <div class="reply-message">${replyMessage}</div>
+                <textarea class="form-control reply-input" id="reply-${notification.id}" rows="2" placeholder="Write reply..."></textarea>
+                <div class="reply-actions">
+                    <button class="btn-secondary btn-reply-clear" type="button" data-id="${notification.id}">Clear</button>
+                    <button class="btn-primary btn-reply-send" type="button" data-id="${notification.id}">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                    <span class="reply-status" id="reply-status-${notification.id}" aria-live="polite"></span>
+                </div>
+            </div>
+        `;
         tr.innerHTML = `
             <td><strong>${notification.title}</strong></td>
             <td><span class="status-badge ${notification.type}">${notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}</span></td>
             <td>${notification.recipients}</td>
             <td>${notification.sentDate}</td>
             <td><span class="status-badge ${notification.status}">${notification.status.charAt(0).toUpperCase() + notification.status.slice(1)}</span></td>
+            <td>${replyCell}</td>
             <td>
                 <div class="table-actions">
-                    <div class="action-icon view" onclick="viewNotification(${notification.id})" title="View Details">
-                        <i class="fas fa-eye"></i>
-                    </div>
-                    <div class="action-icon edit" onclick="resendNotification(${notification.id})" title="Resend">
-                        <i class="fas fa-paper-plane"></i>
-                    </div>
+                    <button class="btn-secondary btn-compact" type="button" onclick="viewNotification(${notification.id})" title="View Details">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                    <button class="btn-primary btn-compact" type="button" onclick="resendNotification(${notification.id})" title="Resend">
+                        <i class="fas fa-paper-plane"></i> Resend
+                    </button>
                 </div>
             </td>
         `;
@@ -1053,6 +1678,311 @@ function renderNotifications() {
     });
 
     reapplyGlobalSearch();
+    initNotificationReplyActions();
+    setTimeout(() => setLoadingState('notificationsTable', false), 300);
+}
+
+function formatAttendanceBadge(status, type) {
+    if (status === 'picked' || status === 'dropped') {
+        return `<span class="status-badge completed">${type}</span>`;
+    }
+    if (status === 'missed') {
+        return `<span class="status-badge cancelled">${type}</span>`;
+    }
+    return `<span class="status-badge pending">${type}</span>`;
+}
+
+function renderAttendance() {
+    const tbody = document.querySelector('#attendanceTable tbody');
+    if (!tbody) return;
+    setLoadingState('attendanceTable', true);
+    const pickupFilter = document.getElementById('attendancePickupFilter')?.value || 'all';
+    const dropoffFilter = document.getElementById('attendanceDropoffFilter')?.value || 'all';
+
+    const filtered = attendanceData
+        .filter(row => pickupFilter === 'all' || row.pickupStatus === pickupFilter)
+        .filter(row => dropoffFilter === 'all' || row.dropoffStatus === dropoffFilter);
+
+    tbody.innerHTML = '';
+    if (filtered.length === 0) {
+        renderEmptyRow(tbody, 5, 'No attendance records available.');
+    }
+    filtered.forEach(row => {
+        const pickupLabel = row.pickupStatus === 'picked' ? 'Picked Up' : row.pickupStatus === 'missed' ? 'Missed' : 'Pending';
+        const dropoffLabel = row.dropoffStatus === 'dropped' ? 'Dropped' : row.dropoffStatus === 'missed' ? 'Missed' : 'Pending';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${row.studentName}</strong></td>
+            <td>${row.busNumber}</td>
+            <td>${formatAttendanceBadge(row.pickupStatus, pickupLabel)}</td>
+            <td>${formatAttendanceBadge(row.dropoffStatus, dropoffLabel)}</td>
+            <td>${row.time}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    reapplyGlobalSearch();
+    setTimeout(() => setLoadingState('attendanceTable', false), 300);
+}
+
+function renderPayments() {
+    const tbody = document.querySelector('#paymentsTable tbody');
+    if (!tbody) return;
+    setLoadingState('paymentsTable', true);
+    const statusFilter = document.getElementById('paymentStatusFilter')?.value || 'all';
+    const periodFilter = document.getElementById('paymentPeriodFilter')?.value || 'all';
+
+    const filtered = paymentsData
+        .filter(payment => statusFilter === 'all' || payment.status === statusFilter)
+        .filter(payment => matchesPeriod(payment.date, periodFilter));
+
+    tbody.innerHTML = '';
+    if (filtered.length === 0) {
+        renderEmptyRow(tbody, 5, 'No payments found.');
+    }
+    filtered.forEach(payment => {
+        const statusLabel = payment.status.charAt(0).toUpperCase() + payment.status.slice(1);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${payment.parentName}</strong></td>
+            <td>${payment.student}</td>
+            <td>EGP ${payment.amount.toLocaleString()}</td>
+            <td><span class="status-badge ${payment.status}">${statusLabel}</span></td>
+            <td>${payment.date}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    reapplyGlobalSearch();
+    setTimeout(() => setLoadingState('paymentsTable', false), 300);
+}
+
+function renderBusCapacity() {
+    const tbody = document.querySelector('#busCapacityTable tbody');
+    if (!tbody) return;
+    setLoadingState('busCapacityTable', true);
+    const statusFilter = document.getElementById('capacityStatusFilter')?.value || 'all';
+    const capacityMap = new Map(busOccupancyData.map(item => [item.busNumber, item.currentStudents]));
+
+    const rows = busesData.map(bus => {
+        const currentStudents = capacityMap.get(bus.busNumber) || Math.floor(bus.capacity * 0.7);
+        const availableSeats = Math.max(bus.capacity - currentStudents, 0);
+        let status = 'available';
+        if (availableSeats === 0) status = 'full';
+        else if (availableSeats <= 5) status = 'limited';
+        return {
+            busNumber: bus.busNumber,
+            maxCapacity: bus.capacity,
+            currentStudents,
+            availableSeats,
+            status
+        };
+    }).filter(row => statusFilter === 'all' || row.status === statusFilter);
+
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+        renderEmptyRow(tbody, 5, 'No capacity data available.');
+    }
+    rows.forEach(row => {
+        const statusLabel = row.status.charAt(0).toUpperCase() + row.status.slice(1);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${row.busNumber}</strong></td>
+            <td>${row.maxCapacity}</td>
+            <td>${row.currentStudents}</td>
+            <td>${row.availableSeats}</td>
+            <td><span class="status-badge ${row.status}">${statusLabel}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    reapplyGlobalSearch();
+    setTimeout(() => setLoadingState('busCapacityTable', false), 300);
+}
+
+function renderEmergencyAlerts() {
+    const tbody = document.querySelector('#emergencyAlertsTable tbody');
+    if (!tbody) return;
+    setLoadingState('emergencyAlertsTable', true);
+    const typeFilter = document.getElementById('emergencyTypeFilter')?.value || 'all';
+    const filtered = emergencyAlertsData.filter(alert => typeFilter === 'all' || alert.type === typeFilter);
+
+    tbody.innerHTML = '';
+    if (filtered.length === 0) {
+        renderEmptyRow(tbody, 5, 'No emergency alerts available.');
+    }
+    filtered.forEach(alert => {
+        const typeLabel = alert.type.charAt(0).toUpperCase() + alert.type.slice(1);
+        const badgeClass = alert.type === 'delay' ? 'delay' : 'emergency';
+        const tr = document.createElement('tr');
+        if (alert.type === 'accident' || alert.type === 'medical') {
+            tr.classList.add('emergency-critical');
+        }
+        tr.innerHTML = `
+            <td><span class="status-badge ${badgeClass}">${typeLabel}</span></td>
+            <td><strong>${alert.busNumber}</strong></td>
+            <td>${alert.driver}</td>
+            <td>${alert.location}</td>
+            <td>${alert.time}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    reapplyGlobalSearch();
+    setTimeout(() => setLoadingState('emergencyAlertsTable', false), 300);
+}
+
+function populateEmergencyLogFilters() {
+    const busFilter = document.getElementById('emergencyLogBusFilter');
+    const driverFilter = document.getElementById('emergencyLogDriverFilter');
+    if (!busFilter || !driverFilter) return;
+
+    const currentBus = busFilter.value || 'all';
+    const currentDriver = driverFilter.value || 'all';
+
+    const busOptions = ['<option value="all">All Buses</option>']
+        .concat([...new Set(emergencyLogsData.map(item => item.bus))].map(bus => `<option value="${bus}">${bus}</option>`));
+    const driverOptions = ['<option value="all">All Drivers</option>']
+        .concat([...new Set(emergencyLogsData.map(item => item.driver))].map(driver => `<option value="${driver}">${driver}</option>`));
+
+    busFilter.innerHTML = busOptions.join('');
+    driverFilter.innerHTML = driverOptions.join('');
+
+    busFilter.value = [...busFilter.options].some(opt => opt.value === currentBus) ? currentBus : 'all';
+    driverFilter.value = [...driverFilter.options].some(opt => opt.value === currentDriver) ? currentDriver : 'all';
+}
+
+function renderEmergencyLogs() {
+    const tbody = document.getElementById('emergencyLogsBody');
+    if (!tbody) return;
+    setLoadingState('emergencyLogsTable', true);
+
+    const dateFilter = document.getElementById('emergencyLogDateFilter')?.value || '';
+    const busFilter = document.getElementById('emergencyLogBusFilter')?.value || 'all';
+    const driverFilter = document.getElementById('emergencyLogDriverFilter')?.value || 'all';
+    const typeFilter = document.getElementById('emergencyLogTypeFilter')?.value || 'all';
+
+    populateEmergencyLogFilters();
+
+    const filtered = emergencyLogsData.filter(item => {
+        const dateMatch = !dateFilter || item.time.startsWith(dateFilter);
+        const busMatch = busFilter === 'all' || item.bus === busFilter;
+        const driverMatch = driverFilter === 'all' || item.driver === driverFilter;
+        const typeMatch = typeFilter === 'all' || item.type === typeFilter;
+        return dateMatch && busMatch && driverMatch && typeMatch;
+    });
+
+    tbody.innerHTML = '';
+    if (filtered.length === 0) {
+        renderEmptyRow(tbody, 6, 'No emergency logs available.');
+    }
+
+    filtered.forEach(item => {
+        const typeLabel = item.type.charAt(0).toUpperCase() + item.type.slice(1);
+        const badgeClass = item.type === 'delay' ? 'delay' : 'emergency';
+        const tr = document.createElement('tr');
+        if (item.type === 'accident' || item.type === 'medical') tr.classList.add('emergency-critical');
+        tr.innerHTML = `
+            <td><strong>${item.bus}</strong></td>
+            <td>${item.driver}</td>
+            <td>${item.location}</td>
+            <td><span class="status-badge ${badgeClass}">${typeLabel}</span></td>
+            <td>${item.time}</td>
+            <td>${item.notes}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    reapplyGlobalSearch();
+    setTimeout(() => setLoadingState('emergencyLogsTable', false), 300);
+}
+
+function syncAttendanceEvents() {
+    try {
+        const raw = localStorage.getItem(ATTENDANCE_STORAGE_KEY);
+        if (!raw) return;
+        const events = JSON.parse(raw);
+        if (!Array.isArray(events)) return;
+
+        const existingIds = new Set(attendanceEventsData.map(e => e.id));
+        events.forEach(event => {
+            if (existingIds.has(event.id)) return;
+            attendanceEventsData.unshift(event);
+        });
+    } catch {
+        // ignore
+    }
+}
+
+function renderAttendanceRealtime() {
+    const tbody = document.getElementById('attendanceRealtimeBody');
+    if (!tbody) return;
+    setLoadingState('attendanceRealtimeTable', true);
+
+    syncAttendanceEvents();
+
+    tbody.innerHTML = '';
+    if (attendanceEventsData.length === 0) {
+        renderEmptyRow(tbody, 5, 'No attendance updates yet.');
+        setTimeout(() => setLoadingState('attendanceRealtimeTable', false), 300);
+        return;
+    }
+
+    attendanceEventsData.slice(0, 12).forEach(item => {
+        const pickupBadge = item.pickupStatus === 'missed' ? 'cancelled' : item.pickupStatus === 'picked' ? 'completed' : 'pending';
+        const dropoffBadge = item.dropoffStatus === 'missed' ? 'cancelled' : item.dropoffStatus === 'dropped' ? 'completed' : 'pending';
+        const tr = document.createElement('tr');
+        if (item.pickupStatus === 'missed' || item.dropoffStatus === 'missed') {
+            tr.classList.add('emergency-critical');
+        }
+        tr.innerHTML = `
+            <td><strong>${item.student}</strong></td>
+            <td>${item.bus}</td>
+            <td><span class="status-badge ${pickupBadge}">${item.pickupLabel}</span></td>
+            <td><span class="status-badge ${dropoffBadge}">${item.dropoffLabel}</span></td>
+            <td>${item.time}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    reapplyGlobalSearch();
+    setTimeout(() => setLoadingState('attendanceRealtimeTable', false), 300);
+}
+
+let notificationReplyBound = false;
+function initNotificationReplyActions() {
+    if (notificationReplyBound) return;
+    const table = document.getElementById('notificationsTable');
+    if (!table) return;
+
+    table.addEventListener('click', (event) => {
+        const sendBtn = event.target.closest('.btn-reply-send');
+        const clearBtn = event.target.closest('.btn-reply-clear');
+        if (!sendBtn && !clearBtn) return;
+
+        const id = (sendBtn || clearBtn).getAttribute('data-id');
+        const input = document.getElementById(`reply-${id}`);
+        const status = document.getElementById(`reply-status-${id}`);
+        if (!input) return;
+
+        if (clearBtn) {
+            input.value = '';
+            if (status) status.textContent = '';
+            return;
+        }
+
+        const message = input.value.trim();
+        if (!message) {
+            if (status) status.textContent = 'Please write a reply first.';
+            return;
+        }
+
+        input.value = '';
+        if (status) status.textContent = 'Reply sent.';
+        setTimeout(() => { if (status) status.textContent = ''; }, 2000);
+    });
+
+    notificationReplyBound = true;
 }
 
 function renderComplaints() {
@@ -1279,6 +2209,7 @@ function initStudentQrTools() {
 
 function generateStudentQr() {
     const studentId = document.getElementById('qrStudentSelect')?.value;
+    const zone = document.getElementById('qrZoneSelect')?.value;
     const tripType = document.getElementById('qrTripType')?.value || 'pickup';
     const note = (document.getElementById('qrNoteInput')?.value || '').trim();
     const qrContainer = document.getElementById('studentQrContainer');
@@ -1290,6 +2221,11 @@ function generateStudentQr() {
         return;
     }
 
+    if (!zone) {
+        showToast('Please select a zone/region first.', 'warning');
+        return;
+    }
+
     const student = studentsData.find(item => String(item.id) === studentId);
     if (!student || !qrContainer || !qrImage || !payloadPreview) return;
 
@@ -1297,6 +2233,7 @@ function generateStudentQr() {
         studentId: student.studentId,
         name: student.name,
         school: student.school,
+        zone: zone,
         tripType,
         note,
         generatedAt: new Date().toISOString()
@@ -1304,16 +2241,16 @@ function generateStudentQr() {
 
     currentStudentQrPayload = JSON.stringify(payloadObject);
     currentStudentQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(currentStudentQrPayload)}`;
-    currentStudentQrFilename = `student-qr-${student.studentId}-${tripType}.png`;
+    currentStudentQrFilename = `student-qr-${student.studentId}-${zone}-${tripType}.png`;
 
     qrImage.src = currentStudentQrImageUrl;
-    qrImage.alt = `QR code for ${student.name}`;
+    qrImage.alt = `QR code for ${student.name} - Zone: ${zone}`;
     qrContainer.classList.add('has-qr');
     payloadPreview.textContent = currentStudentQrPayload;
 
-    appendActivityLog('create', 'Student QR', `Generated QR for ${student.name} (${tripType})`);
+    appendActivityLog('create', 'Student QR', `Generated QR for ${student.name} (Zone: ${zone}, ${tripType})`);
     renderActivityLogs();
-    showToast('Student QR generated successfully.', 'success');
+    showToast(`Student QR generated successfully for ${zone}.`, 'success');
 }
 
 function downloadStudentQr() {
@@ -1573,84 +2510,6 @@ function renderRequests() {
     reapplyGlobalSearch();
 }
 
-function renderNewParentRequests() {
-    const tbody = document.querySelector('#parentNewRequestsTable tbody');
-    if (!tbody) return;
-
-    tbody.innerHTML = '';
-
-    getNormalizedRequests()
-        .filter(req => req.role === 'parent' && req.status === 'new')
-        .forEach(req => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${req.from}</strong></td>
-                <td>${req.subject}</td>
-                <td>
-                    <span class="status-badge ${req.priority === 'high' ? 'danger' : req.priority === 'medium' ? 'warning' : 'active'}">
-                        ${req.priority.charAt(0).toUpperCase() + req.priority.slice(1)}
-                    </span>
-                </td>
-                <td>${req.createdAt}</td>
-                <td>
-                    <div class="table-actions">
-                        <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="markRequestInProgress(${req.id})">
-                            <i class="fas fa-play"></i> Start
-                        </button>
-                        <button class="btn btn-success" style="padding: 6px 10px; font-size: 12px;" onclick="markRequestResolved(${req.id})">
-                            <i class="fas fa-check"></i> Resolve
-                        </button>
-                        <div class="action-icon view" onclick="viewRequest(${req.id})" title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </div>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-    reapplyGlobalSearch();
-}
-
-function renderNewDriverRequests() {
-    const tbody = document.querySelector('#driverNewRequestsTable tbody');
-    if (!tbody) return;
-
-    tbody.innerHTML = '';
-
-    getNormalizedRequests()
-        .filter(req => req.role === 'driver' && req.status === 'new')
-        .forEach(req => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${req.from}</strong></td>
-                <td>${req.subject}</td>
-                <td>
-                    <span class="status-badge ${req.priority === 'high' ? 'danger' : req.priority === 'medium' ? 'warning' : 'active'}">
-                        ${req.priority.charAt(0).toUpperCase() + req.priority.slice(1)}
-                    </span>
-                </td>
-                <td>${req.createdAt}</td>
-                <td>
-                    <div class="table-actions">
-                        <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="markRequestInProgress(${req.id})">
-                            <i class="fas fa-play"></i> Start
-                        </button>
-                        <button class="btn btn-success" style="padding: 6px 10px; font-size: 12px;" onclick="markRequestResolved(${req.id})">
-                            <i class="fas fa-check"></i> Resolve
-                        </button>
-                        <div class="action-icon view" onclick="viewRequest(${req.id})" title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </div>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-    reapplyGlobalSearch();
-}
-
 function updateRequestStatusById(id, nextStatus) {
     const requestIndex = requestsData.findIndex((request, index) => normalizeRequest(request, index + 1).id === id);
     if (requestIndex < 0) return false;
@@ -1662,8 +2521,6 @@ function updateRequestStatusById(id, nextStatus) {
 function markRequestInProgress(id) {
     if (!updateRequestStatusById(id, 'in_progress')) return;
     renderRequests();
-    renderNewParentRequests();
-    renderNewDriverRequests();
 }
 
 function markRequestResolved(id) {
@@ -1672,8 +2529,6 @@ function markRequestResolved(id) {
     if (confirm('Mark this request as resolved?')) {
         if (!updateRequestStatusById(id, 'resolved')) return;
         renderRequests();
-        renderNewParentRequests();
-        renderNewDriverRequests();
         alert('Request marked as resolved.');
     }
 }
@@ -1694,6 +2549,7 @@ function viewRequest(id) {
 window.addEventListener('load', () => {
     initDashboardChart();
     initReportsCharts();
+    loadRequestsFromStorage();
     loadRequestsFromApi();
 });
 
@@ -1802,6 +2658,61 @@ function initReportsCharts() {
                         display: true,
                         position: 'bottom'
                     }
+                }
+            }
+        });
+    }
+
+    // Students per School Chart
+    const studentsPerSchoolCtx = document.getElementById('studentsPerSchoolChart');
+    if (studentsPerSchoolCtx) {
+        new Chart(studentsPerSchoolCtx, {
+            type: 'bar',
+            data: {
+                labels: schoolsData.map(s => s.name),
+                datasets: [{
+                    label: 'Students',
+                    data: schoolsData.map(s => s.students),
+                    backgroundColor: '#6366F1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // Monthly Complaints Chart
+    const monthlyComplaintsCtx = document.getElementById('monthlyComplaintsChart');
+    if (monthlyComplaintsCtx) {
+        new Chart(monthlyComplaintsCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Complaints',
+                    data: [6, 4, 5, 3, 2, 4],
+                    borderColor: '#EF4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: true, position: 'bottom' }
+                },
+                scales: {
+                    y: { beginAtZero: true }
                 }
             }
         });
@@ -2031,21 +2942,115 @@ function loadRequestsFromApi() {
             if (data && data.length) {
                 requestsData.push(...data);
                 renderRequests();
-                renderNewParentRequests();
-                renderNewDriverRequests();
             }
         })
         .catch(() => {
             renderRequests();
-            renderNewParentRequests();
-            renderNewDriverRequests();
         });
+}
+
+function loadRequestsFromStorage() {
+    try {
+        const raw = localStorage.getItem('safestep-requests');
+        if (!raw) return;
+        const stored = JSON.parse(raw);
+        if (Array.isArray(stored) && stored.length) {
+            requestsData.push(...stored);
+        }
+    } catch {
+        // Ignore storage errors
+    }
+}
+
+function focusBroadcastForm() {
+    const form = document.getElementById('broadcastForm');
+    if (!form) return;
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const title = document.getElementById('broadcastTitle');
+    if (title) title.focus();
+}
+
+function storeBroadcast(payload) {
+    try {
+        const raw = localStorage.getItem(BROADCAST_STORAGE_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        list.push(payload);
+        localStorage.setItem(BROADCAST_STORAGE_KEY, JSON.stringify(list));
+    } catch {
+        // Ignore storage errors
+    }
+}
+
+function sendBroadcastNotification() {
+    const form = document.getElementById('broadcastForm');
+    if (form && !validateForm(form)) {
+        showToast('Please complete required fields.', 'warning');
+        return;
+    }
+    const titleInput = document.getElementById('broadcastTitle');
+    const messageInput = document.getElementById('broadcastMessage');
+    const typeSelect = document.getElementById('broadcastType');
+    const toParents = document.getElementById('broadcastToParents');
+    const toDrivers = document.getElementById('broadcastToDrivers');
+
+    if (!titleInput || !messageInput || !typeSelect || !toParents || !toDrivers) return;
+
+    const title = titleInput.value.trim();
+    const message = messageInput.value.trim();
+    const type = typeSelect.value;
+    const targets = [];
+    if (toParents.checked) targets.push('parent');
+    if (toDrivers.checked) targets.push('driver');
+
+    if (!title || !message) {
+        alert('Please enter a title and message.');
+        return;
+    }
+
+    if (!targets.length) {
+        alert('Select at least one recipient group.');
+        return;
+    }
+
+    const createdAt = new Date().toISOString();
+    const recipientsLabel = targets.length === 2 ? 'All Users' : targets[0] === 'parent' ? 'Parents' : 'Drivers';
+
+    const notification = {
+        id: Date.now(),
+        title,
+        type,
+        recipients: recipientsLabel,
+        sentDate: createdAt.replace('T', ' ').slice(0, 16),
+        status: 'sent'
+    };
+
+    notificationsData.unshift(notification);
+    renderNotifications();
+
+    targets.forEach(target => {
+        storeBroadcast({
+            id: notification.id,
+            title,
+            message,
+            type,
+            target,
+            createdAt
+        });
+    });
+
+    titleInput.value = '';
+    messageInput.value = '';
+    typeSelect.value = 'general';
+    toParents.checked = true;
+    toDrivers.checked = true;
+
+    alert('Notification sent successfully.');
 }
 
 // ===== PROFESSIONAL REPORT FUNCTIONS =====
 
 // Export Report as PDF
-function exportReportPDF() {
+function exportReportPDFDetailed() {
     const reportTitle = 'School Bus Tracking System - Monthly Report';
     const period = document.getElementById('reportPeriod')?.value || 'current';
     const timestamp = new Date().toLocaleString();
@@ -2094,6 +3099,49 @@ ROUTE PERFORMANCE
     document.body.removeChild(element);
     
     alert('Report exported successfully!');
+}
+
+function exportTableToCsv(tableId, filename) {
+    const element = document.getElementById(tableId);
+    const table = element?.tagName === 'TABLE' ? element : element?.closest('table');
+    if (!table) return;
+
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const csv = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        return cells.map(cell => {
+            const text = cell.textContent.replace(/\s+/g, ' ').trim();
+            return `"${text.replace(/"/g, '""')}"`;
+        }).join(',');
+    }).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename || 'export'}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function exportTableToPdf(tableId, filename) {
+    const element = document.getElementById(tableId);
+    const table = element?.tagName === 'TABLE' ? element : element?.closest('table');
+    if (!table) return;
+
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const text = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        return cells.map(cell => cell.textContent.replace(/\s+/g, ' ').trim()).join(' | ');
+    }).join('\n');
+
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename || 'export'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // Update Report Period
@@ -2590,14 +3638,13 @@ function navigateTo(pageId) {
                 'buses': 'Bus Fleet Management',
                 'reports': 'Reports & Analytics',
                 'requests': 'Requests Management',
-                'parent-new-requests': 'New Parent Requests',
-                'driver-new-requests': 'New Driver Requests',
                 'financials': 'Financial Management',
                 'maintenance': 'Bus Maintenance',
                 'live-tracking': 'Live Bus Tracking',
                 'students': 'Students Management',
                 'trips': 'Trips & Routes',
                 'notifications': 'Notifications',
+                'emergency-logs': 'Emergency Logs',
                 'complaints': 'Complaints Management',
                 'schools': 'Schools Management',
                 'users': 'Users & Roles',
@@ -2619,16 +3666,12 @@ function navigateTo(pageId) {
 
             if (pageId === 'live-tracking') {
                 renderLiveTracking();
-            } else if (pageId === 'parent-new-requests') {
-                renderNewParentRequests();
-            } else if (pageId === 'driver-new-requests') {
-                renderNewDriverRequests();
             } else if (pageId === 'activity-logs') {
                 renderActivityLogs();
                 initStudentQrTools();
             }
 
-            applyGlobalSearch(globalSearchInput ? globalSearchInput.value : '');
+            reapplyGlobalSearch();
         }
 }
 
@@ -2700,6 +3743,7 @@ function addDriver() {
 
 function exportReportPDF() {
     showToast('Exporting report to PDF...', 'info');
+    exportReportPDFDetailed();
     setTimeout(() => {
         showToast('Report exported successfully!', 'success');
     }, 1500);

@@ -6,10 +6,61 @@ const menuToggle = document.getElementById('menuToggle');
 const sidebar = document.querySelector('.sidebar');
 const themeToggleBtn = document.getElementById('themeToggle');
 const THEME_STORAGE_KEY = 'safestep-theme';
+const BROADCAST_STORAGE_KEY = 'safestep-broadcasts';
 const MOBILE_BREAKPOINT = 768;
 const sidebarOverlay = document.createElement('div');
 sidebarOverlay.className = 'sidebar-overlay';
 document.body.appendChild(sidebarOverlay);
+
+let toastCount = 0;
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.style.top = `${20 + (toastCount * 12)}px`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'triangle-exclamation' : 'info-circle'}"></i>
+        <span>${message}</span>
+        <button class="toast-close" type="button"><i class="fas fa-times"></i></button>
+    `;
+    document.body.appendChild(toast);
+    toastCount += 1;
+
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+        toast.remove();
+        toastCount = Math.max(0, toastCount - 1);
+    });
+
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+            toastCount = Math.max(0, toastCount - 1);
+        }
+    }, 4000);
+}
+
+function playNotificationSound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 880;
+        gain.gain.value = 0.05;
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + 0.15);
+    } catch {
+        // ignore audio errors
+    }
+}
+
+function setLoadingState(targetId, isLoading) {
+    const element = document.getElementById(targetId);
+    if (!element) return;
+    const wrapper = element.closest('.table-wrapper') || element.closest('.card') || element;
+    wrapper.classList.toggle('loading', isLoading);
+}
 
 function isMobileView() {
     return window.innerWidth <= MOBILE_BREAKPOINT;
@@ -126,6 +177,23 @@ function updateTime() {
 updateTime();
 setInterval(updateTime, 1000);
 
+const busInfo = {
+    number: 'Bus #42',
+    capacity: 45,
+    route: 'Route A - Morning'
+};
+
+function renderBusInfo() {
+    const numberEl = document.getElementById('busNumberInfo');
+    const capacityEl = document.getElementById('busCapacityInfo');
+    const routeEl = document.getElementById('busRouteInfo');
+    if (numberEl) numberEl.textContent = busInfo.number;
+    if (capacityEl) capacityEl.textContent = `${busInfo.capacity} Seats`;
+    if (routeEl) routeEl.textContent = busInfo.route;
+}
+
+renderBusInfo();
+
 // Students Data
 const studentsData = [
    { name: 'Ahmed Mohamed', grade: 'Grade 5', pickup: 'Corniche El-Nile, Alexandria', status: null },
@@ -154,9 +222,96 @@ const studentsData = [
     { name: 'Yassin Khaled', grade: 'Grade 5', pickup: 'Corniche El-Nile, Alexandria', status: null }
 ];
 
+const attendanceData = studentsData.map(student => ({
+    name: student.name,
+    pickup: 'pending',
+    dropoff: 'pending'
+}));
+
+const ATTENDANCE_STORAGE_KEY = 'driver_attendance_events';
+
+function pushAttendanceEvent(record) {
+    try {
+        const raw = localStorage.getItem(ATTENDANCE_STORAGE_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        list.unshift(record);
+        localStorage.setItem(ATTENDANCE_STORAGE_KEY, JSON.stringify(list.slice(0, 100)));
+    } catch {
+        // ignore storage errors
+    }
+}
+
+function renderAttendanceTable() {
+    const tbody = document.getElementById('attendanceTableBody');
+    if (!tbody) return;
+    setLoadingState('attendanceTable', true);
+    tbody.innerHTML = '';
+
+    if (attendanceData.length === 0) {
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="4">No attendance records available.</td></tr>`;
+        return;
+    }
+
+    attendanceData.forEach((record, index) => {
+        const pickupLabel = record.pickup === 'picked' ? 'Picked' : record.pickup === 'missed' ? 'Missed' : 'Pending';
+        const dropoffLabel = record.dropoff === 'dropped' ? 'Dropped' : record.dropoff === 'missed' ? 'Missed' : 'Pending';
+        const pickupBadge = record.pickup === 'picked' ? 'completed' : record.pickup === 'missed' ? 'cancelled' : 'pending';
+        const dropoffBadge = record.dropoff === 'dropped' ? 'completed' : record.dropoff === 'missed' ? 'cancelled' : 'pending';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${record.name}</strong></td>
+            <td><span class="status-badge ${pickupBadge}">${pickupLabel}</span></td>
+            <td><span class="status-badge ${dropoffBadge}">${dropoffLabel}</span></td>
+            <td>
+                <div class="table-actions">
+                    <button class="btn-secondary btn-compact" type="button" onclick="markPickup(${index})">Pickup</button>
+                    <button class="btn-primary btn-compact" type="button" onclick="markDropoff(${index})">Drop-off</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    setTimeout(() => setLoadingState('attendanceTable', false), 300);
+}
+
+function markPickup(index) {
+    attendanceData[index].pickup = 'picked';
+    renderAttendanceTable();
+    pushAttendanceEvent({
+        id: Date.now(),
+        student: attendanceData[index].name,
+        bus: busInfo.number,
+        pickupStatus: 'picked',
+        dropoffStatus: attendanceData[index].dropoff,
+        pickupLabel: 'Picked',
+        dropoffLabel: attendanceData[index].dropoff === 'dropped' ? 'Dropped' : attendanceData[index].dropoff === 'missed' ? 'Missed' : 'Pending',
+        time: new Date().toLocaleString()
+    });
+}
+
+function markDropoff(index) {
+    attendanceData[index].dropoff = 'dropped';
+    renderAttendanceTable();
+    pushAttendanceEvent({
+        id: Date.now() + 1,
+        student: attendanceData[index].name,
+        bus: busInfo.number,
+        pickupStatus: attendanceData[index].pickup,
+        dropoffStatus: 'dropped',
+        pickupLabel: attendanceData[index].pickup === 'picked' ? 'Picked' : attendanceData[index].pickup === 'missed' ? 'Missed' : 'Pending',
+        dropoffLabel: 'Dropped',
+        time: new Date().toLocaleString()
+    });
+}
+
 function renderStudents() {
     const studentsGrid = document.getElementById('studentsGrid');
     studentsGrid.innerHTML = '';
+    if (studentsData.length === 0) {
+        studentsGrid.innerHTML = '<div class="empty-row">No students available.</div>';
+        return;
+    }
     
     studentsData.forEach((student, index) => {
         const initials = student.name.split(' ').map(n => n[0]).join('');
@@ -193,6 +348,21 @@ function markAttendance(index, isPresent) {
     if (!isPresent) {
         moveToNextStudentAfterCancel(index);
     }
+    renderAttendanceTable();
+    if (!isPresent) {
+        attendanceData[index].pickup = 'missed';
+        attendanceData[index].dropoff = 'missed';
+        pushAttendanceEvent({
+            id: Date.now() + 2,
+            student: attendanceData[index].name,
+            bus: busInfo.number,
+            pickupStatus: 'missed',
+            dropoffStatus: 'missed',
+            pickupLabel: 'Missed',
+            dropoffLabel: 'Missed',
+            time: new Date().toLocaleString()
+        });
+    }
 }
 
 function updateAttendanceSummary() {
@@ -205,6 +375,7 @@ function updateAttendanceSummary() {
 }
 
 renderStudents();
+renderAttendanceTable();
 
 // Route Map + GPS
 const stops = [
@@ -292,6 +463,8 @@ let driverMap;
 let driverMarker;
 let nextStudentMarker;
 let driverGpsInterval = null;
+let simulatedLat = 31.21564;
+let simulatedLng = 29.95527;
 
 const stopCoordinatesByAddress = {
     'Corniche El-Nile, Alexandria': [31.2187, 29.9553],
@@ -390,7 +563,7 @@ function initDriverGpsMap() {
         }).addTo(driverMap);
 
         driverMarker = L.marker([31.21564, 29.95527]).addTo(driverMap)
-            .bindPopup('Current Bus Position');
+            .bindPopup(`<strong>${busInfo.number}</strong><br>${busInfo.route}<br>Driver: Omer Mohamed`);
     }
 
     updateDriverGpsFromApi();
@@ -409,8 +582,19 @@ async function updateDriverGpsFromApi() {
                 driverMap.setView([lat, lng], driverMap.getZoom());
             }
         }
+        if (driverMarker) {
+            driverMarker.bindPopup(`<strong>${busInfo.number}</strong><br>${busInfo.route}<br>Driver: Omer Mohamed`);
+        }
     } catch (err) {
         console.warn('Driver GPS API error', err);
+        simulatedLat += (Math.random() - 0.5) * 0.001;
+        simulatedLng += (Math.random() - 0.5) * 0.001;
+        if (driverMarker) {
+            driverMarker.setLatLng([simulatedLat, simulatedLng]);
+            if (driverMap) {
+                driverMap.setView([simulatedLat, simulatedLng], driverMap.getZoom());
+            }
+        }
     }
 }
 
@@ -507,7 +691,7 @@ function endTrip() {
     
     document.getElementById('currentSpeed').textContent = '0';
     
-    alert('Trip completed successfully!');
+    showToast('Trip completed successfully!', 'success');
 }
 
 function updateTripInfo() {
@@ -537,6 +721,74 @@ function updateTripInfo() {
     document.getElementById('stopsText').textContent = `${completedStops}/8 Stops`;
 }
 
+const emergencyLogData = [];
+
+function renderEmergencyLog() {
+    const logEl = document.getElementById('emergencyLog');
+    if (!logEl) return;
+    if (emergencyLogData.length === 0) {
+        logEl.innerHTML = '<div class="empty-row">No emergency alerts recorded.</div>';
+        return;
+    }
+    logEl.innerHTML = emergencyLogData.slice(0, 3).map(item => `
+        <div class="emergency-log-item">
+            <span><strong>${item.type}</strong> • ${item.bus}</span>
+            <span>${item.time}</span>
+        </div>
+    `).join('');
+}
+
+function validateField(field) {
+    if (!field) return true;
+    const value = String(field.value || '').trim();
+    const required = field.hasAttribute('required');
+    let message = '';
+    if (required && !value) message = 'This field is required.';
+    field.classList.toggle('field-error', Boolean(message));
+
+    const errorEl = field.parentElement?.querySelector('.error-text') || (() => {
+        const el = document.createElement('div');
+        el.className = 'error-text';
+        field.parentElement?.appendChild(el);
+        return el;
+    })();
+    if (errorEl) errorEl.textContent = message;
+
+    return !message;
+}
+
+function triggerEmergency(forcedType) {
+    const typeEl = document.getElementById('emergencyType');
+    const noteEl = document.getElementById('emergencyNote');
+    if (!typeEl || !noteEl) return;
+
+    if (forcedType) {
+        typeEl.value = forcedType;
+    }
+    if (!validateField(typeEl) || !validateField(noteEl)) {
+        showToast('Please fill in emergency details.', 'warning');
+        return;
+    }
+
+    const type = forcedType || typeEl.value;
+    const note = noteEl.value.trim();
+    const record = {
+        type: type.charAt(0).toUpperCase() + type.slice(1),
+        bus: busInfo.number,
+        driver: 'Omer Mohamed',
+        note,
+        time: new Date().toLocaleTimeString()
+    };
+    emergencyLogData.unshift(record);
+    renderEmergencyLog();
+    showToast('Emergency alert sent.', 'error');
+    playNotificationSound();
+
+    noteEl.value = '';
+}
+
+renderEmergencyLog();
+
 if (startTripBtn) {
     startTripBtn.addEventListener('click', startTrip);
 }
@@ -551,15 +803,18 @@ if (endTripBtn) {
 
 function saveTripNotes() {
     const notes = document.getElementById('tripNotes').value;
+    const input = document.getElementById('tripNotes');
     if (notes.trim()) {
-        alert('Trip notes saved successfully!');
+        input.classList.remove('field-error');
+        showToast('Trip notes saved successfully!', 'success');
     } else {
-        alert('Please enter some notes before saving.');
+        input.classList.add('field-error');
+        showToast('Please enter some notes before saving.', 'warning');
     }
 }
 
 function sendAlert() {
-    alert('Emergency alert sent to all parents!');
+    triggerEmergency('general');
 }
 
 // Driver Notifications
@@ -568,6 +823,50 @@ const driverNotifications = [
     { id: 2, type: 'warning', icon: 'fa-exclamation-triangle', title: 'Weather Alert', message: 'Heavy rain expected tomorrow. Drive safely.', time: '5 hours ago', read: false },
     { id: 3, type: 'success', icon: 'fa-check-circle', title: 'Trip Completed', message: 'Morning route completed successfully at 8:15 AM', time: 'Yesterday', read: true }
 ];
+
+function updateNotificationBadge() {
+    const badge = document.querySelector('.notification-icon .badge');
+    if (!badge) return;
+    const unread = driverNotifications.filter(n => !n.read).length;
+    badge.textContent = unread > 99 ? '99+' : String(unread);
+}
+
+function getBroadcastIcon(type) {
+    if (type === 'emergency') return 'fa-triangle-exclamation';
+    if (type === 'delay') return 'fa-clock';
+    if (type === 'route-change') return 'fa-route';
+    return 'fa-info-circle';
+}
+
+function loadBroadcastNotifications(role) {
+    try {
+        const raw = localStorage.getItem(BROADCAST_STORAGE_KEY);
+        if (!raw) return;
+        const broadcasts = JSON.parse(raw);
+        if (!Array.isArray(broadcasts)) return;
+
+        const existingIds = new Set(driverNotifications.map(n => n.id));
+        broadcasts
+            .filter(b => b.target === role)
+            .forEach(b => {
+                if (existingIds.has(b.id)) return;
+                driverNotifications.unshift({
+                    id: b.id,
+                    type: b.type === 'emergency' ? 'warning' : b.type === 'delay' ? 'warning' : 'info',
+                    icon: getBroadcastIcon(b.type),
+                    title: b.title,
+                    message: b.message,
+                    time: new Date(b.createdAt).toLocaleString(),
+                    read: false
+                });
+            });
+        updateNotificationBadge();
+        showToast('New notification received.', 'info');
+        playNotificationSound();
+    } catch (err) {
+        console.warn('Failed to load broadcast notifications', err);
+    }
+}
 
 function consumeParentAbsenceAlert() {
     try {
@@ -588,6 +887,9 @@ function consumeParentAbsenceAlert() {
         });
 
         renderDriverNotifications();
+        updateNotificationBadge();
+        showToast('Student absence alert received.', 'warning');
+        playNotificationSound();
         localStorage.removeItem('driver_absence_alert');
     } catch (error) {
         console.warn('Failed to consume parent absence alert', error);
@@ -597,6 +899,12 @@ function consumeParentAbsenceAlert() {
 function renderDriverNotifications() {
     const list = document.getElementById('driverNotificationsList');
     if (!list) return;
+    setLoadingState('driverNotificationsList', true);
+    if (driverNotifications.length === 0) {
+        list.innerHTML = '<div class="empty-row">No notifications available.</div>';
+        setTimeout(() => setLoadingState('driverNotificationsList', false), 300);
+        return;
+    }
     list.innerHTML = driverNotifications.map(n => `
         <div class="notification-item ${n.read ? 'read' : ''}" data-id="${n.id}">
             <div class="notification-icon-wrap ${n.type}">
@@ -609,6 +917,8 @@ function renderDriverNotifications() {
             </div>
         </div>
     `).join('');
+    updateNotificationBadge();
+    setTimeout(() => setLoadingState('driverNotificationsList', false), 300);
 }
 
 // Trip History
@@ -623,6 +933,12 @@ const tripHistoryData = [
 function renderTripHistory() {
     const tbody = document.getElementById('tripHistoryBody');
     if (!tbody) return;
+    setLoadingState('tripHistoryBody', true);
+    if (tripHistoryData.length === 0) {
+        tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No trip history available.</td></tr>`;
+        setTimeout(() => setLoadingState('tripHistoryBody', false), 300);
+        return;
+    }
     tbody.innerHTML = tripHistoryData.map(t => `
         <tr>
             <td>${new Date(t.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</td>
@@ -633,13 +949,30 @@ function renderTripHistory() {
             <td><span class="status-badge completed">${t.status}</span></td>
         </tr>
     `).join('');
+    setTimeout(() => setLoadingState('tripHistoryBody', false), 300);
 }
 
 // Init on notifications/trip-history page show
 document.addEventListener('DOMContentLoaded', () => {
+    loadBroadcastNotifications('driver');
     renderDriverNotifications();
     renderTripHistory();
     consumeParentAbsenceAlert();
+    updateNotificationBadge();
+    const emergencyType = document.getElementById('emergencyType');
+    const emergencyNote = document.getElementById('emergencyNote');
+    if (emergencyType) emergencyType.addEventListener('change', () => validateField(emergencyType));
+    if (emergencyNote) emergencyNote.addEventListener('input', () => validateField(emergencyNote));
+});
+
+document.addEventListener('click', (event) => {
+    const notifItem = event.target.closest('.notification-item');
+    if (!notifItem) return;
+    const id = Number(notifItem.getAttribute('data-id'));
+    const notification = driverNotifications.find(n => n.id === id);
+    if (!notification) return;
+    notification.read = true;
+    renderDriverNotifications();
 });
 
 // Notification icon click -> go to notifications page

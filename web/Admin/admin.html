@@ -8,8 +8,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/admin.css">
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    >
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+        defer
+    ></script>
 </head>
 <body>
     <!-- سليدر الاقسام-->
@@ -43,14 +55,6 @@
                 <i class="fas fa-inbox"></i>
                 <span>Requests</span>
             </a>
-            <a href="#" class="nav-link" data-page="parent-new-requests">
-                <i class="fas fa-user-clock"></i>
-                <span>New Parent Requests</span>
-            </a>
-            <a href="#" class="nav-link" data-page="driver-new-requests">
-                <i class="fas fa-id-card"></i>
-                <span>New Driver Requests</span>
-            </a>
             <a href="#" class="nav-link" data-page="financials">
                 <i class="fas fa-dollar-sign"></i>
                 <span>Financials</span>
@@ -74,6 +78,10 @@
             <a href="#" class="nav-link" data-page="notifications">
                 <i class="fas fa-bell"></i>
                 <span>Notifications</span>
+            </a>
+            <a href="#" class="nav-link" data-page="emergency-logs">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span>Emergency Logs</span>
             </a>
             <a href="#" class="nav-link" data-page="complaints">
                 <i class="fas fa-exclamation-triangle"></i>
@@ -120,13 +128,14 @@
                 <div class="search-box">
                     <i class="fas fa-search"></i>
                     <input type="text" placeholder="Search...">
+                    <div class="search-results" id="globalSearchResults" aria-live="polite"></div>
                 </div>
                 <div class="notification-icon" onclick="showNotifications()">
                     <i class="fas fa-bell"></i>
                     <span class="badge">5</span>
                 </div>
                 <div class="profile" style="cursor: pointer;" onclick="navigateTo('admin-profile')">
-                    <img src="https://source.unsplash.com/200x200/?egyptian,man,portrait&sig=11" alt="Admin" style="cursor: pointer;">
+                    <img src="../../IMAGE/ADMIN.png" alt="Admin" style="cursor: pointer;">
                     <span>Admin User</span>
                 </div>
             </div>
@@ -143,7 +152,7 @@
                         <i class="fas fa-users"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>128</h3>
+                        <h3 id="totalParentsStat">128</h3>
                         <p>Total Parents</p>
                         <span class="stat-trend up">
                             <i class="fas fa-arrow-up"></i> 12% from last month
@@ -156,7 +165,7 @@
                         <i class="fas fa-user-tie"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>24</h3>
+                        <h3 id="totalDriversStat">24</h3>
                         <p>Total Drivers</p>
                         <span class="stat-trend up">
                             <i class="fas fa-arrow-up"></i> 3 new this month
@@ -169,7 +178,7 @@
                         <i class="fas fa-bus"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>18</h3>
+                        <h3 id="activeBusesStat">18</h3>
                         <p>Active Buses</p>
                         <span class="stat-trend">
                             <i class="fas fa-minus"></i> No change
@@ -182,10 +191,75 @@
                         <i class="fas fa-route"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>36</h3>
+                        <h3 id="todayTripsStat">36</h3>
                         <p>Today's Trips</p>
                         <span class="stat-trend up">
                             <i class="fas fa-arrow-up"></i> 100% on schedule
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalStudentsStat">412</h3>
+                        <p>Total Students</p>
+                        <span class="stat-trend up">
+                            <i class="fas fa-arrow-up"></i> 8 new enrollments
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-bus-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalBusesStat">22</h3>
+                        <p>Total Buses</p>
+                        <span class="stat-trend">
+                            <i class="fas fa-minus"></i> Fleet steady
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="activeTripsStat">14</h3>
+                        <p>Active Trips</p>
+                        <span class="stat-trend up">
+                            <i class="fas fa-arrow-up"></i> Running now
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="pendingRequestsStat">7</h3>
+                        <p>Pending Requests</p>
+                        <span class="stat-trend">
+                            <i class="fas fa-minus"></i> Waiting review
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="complaintsTodayStat">3</h3>
+                        <p>Complaints Today</p>
+                        <span class="stat-trend down">
+                            <i class="fas fa-arrow-down"></i> -2 vs yesterday
                         </span>
                     </div>
                 </div>
@@ -244,6 +318,36 @@
                             <div class="activity-content">
                                 <p><strong>Driver approved</strong></p>
                                 <span>Michael Brown - 2 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card timeline-card">
+                    <div class="card-header">
+                        <h3>Activity Timeline</h3>
+                        <span class="small-muted">Today</span>
+                    </div>
+                    <div class="timeline-list">
+                        <div class="timeline-item">
+                            <span class="timeline-dot blue"></span>
+                            <div class="timeline-content">
+                                <p><strong>Added driver</strong> — Sara Mahmoud</p>
+                                <span>09:15 AM</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <span class="timeline-dot green"></span>
+                            <div class="timeline-content">
+                                <p><strong>Assigned bus</strong> — Bus #12 to Route H</p>
+                                <span>10:05 AM</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <span class="timeline-dot orange"></span>
+                            <div class="timeline-content">
+                                <p><strong>Approved request</strong> — Parent pickup change</p>
+                                <span>11:40 AM</span>
                             </div>
                         </div>
                     </div>
@@ -414,6 +518,43 @@
                     </table>
                 </div>
             </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Bus Capacity Monitoring</h3>
+                    <div class="card-actions">
+                        <button class="btn-secondary btn-compact" onclick="exportTableToCsv('busCapacityTable', 'bus_capacity')">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="filters" style="margin-bottom: 20px;">
+                    <div class="filter-item">
+                        <label for="capacityStatusFilter" class="form-label">Capacity Status</label>
+                        <select id="capacityStatusFilter" class="form-control">
+                            <option value="all">All</option>
+                            <option value="available">Available Seats</option>
+                            <option value="limited">Limited</option>
+                            <option value="full">Full</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="busCapacityTable">
+                        <thead>
+                            <tr>
+                                <th>Bus Number</th>
+                                <th>Maximum Capacity</th>
+                                <th>Current Students</th>
+                                <th>Available Seats</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- Reports Page -->
@@ -429,16 +570,17 @@
                       font-size: 13px;">
                       Last updated: <span id="reportUpdateTime">Today at 14:32</span></p>
                 </div>
-                <div style="display: flex;
-                
-                 gap: 8px; flex-wrap: wrap;">
-                    <button onclick="exportReportPDF()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: all 0.3s ease;">
-                        <i class="fas fa-download"></i> Export PDF
+                <div class="card-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="exportReportPDF()" class="btn-primary btn-compact">
+                        <i class="fas fa-file-pdf"></i> Export PDF
                     </button>
-                    <button onclick="window.print()" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: all 0.3s ease;">
+                    <button onclick="exportTableToCsv('statisticsTable', 'reports_summary')" class="btn-secondary btn-compact">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </button>
+                    <button onclick="window.print()" class="btn-secondary btn-compact">
                         <i class="fas fa-print"></i> Print
                     </button>
-                    <select id="reportPeriod" onchange="updateReportPeriod()" style="border: 1px solid #e5e7eb; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; background: white;">
+                    <select id="reportPeriod" onchange="updateReportPeriod()" class="form-control" style="max-width: 180px;">
                         <option value="current">Current Month</option>
                         <option value="previous">Previous Month</option>
                         <option value="quarter">This Quarter</option>
@@ -532,6 +674,40 @@
                             <div class="stat">✓ <strong>92%</strong> Present</div>
                             <div class="stat">✗ <strong>5%</strong> Absent</div>
                             <div class="stat">⏱ <strong>3%</strong> Late</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Per School -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Students per School</h3>
+                    </div>
+                    <canvas id="studentsPerSchoolChart"></canvas>
+                    <div class="chart-description">
+                        <h4>🎒 Enrollment by School</h4>
+                        <p>Highlights student distribution across partner schools. Useful for route planning and capacity allocation.</p>
+                        <div class="chart-stats">
+                            <div class="stat"><strong>5</strong> Schools</div>
+                            <div class="stat"><strong>412</strong> Total Students</div>
+                            <div class="stat"><strong>3</strong> Schools at capacity</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Complaints -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Monthly Complaints</h3>
+                    </div>
+                    <canvas id="monthlyComplaintsChart"></canvas>
+                    <div class="chart-description">
+                        <h4>🛡️ Complaints Trend</h4>
+                        <p>Monthly complaints trend to monitor service quality and incident resolution progress.</p>
+                        <div class="chart-stats">
+                            <div class="stat"><strong>18</strong> Total Complaints</div>
+                            <div class="stat"><strong>72%</strong> Resolved</div>
+                            <div class="stat"><strong>-15%</strong> MoM Change</div>
                         </div>
                     </div>
                 </div>
@@ -659,7 +835,7 @@
                         <h3>Detailed Statistics</h3>
                     </div>
                     <div class="table-wrapper">
-                        <table class="data-table">
+                        <table class="data-table" id="statisticsTable">
                             <thead>
                                 <tr>
                                     <th>Route</th>
@@ -808,58 +984,6 @@
             </div>
         </div>
 
-        <!-- New Parent Requests Page -->
-        <div class="page" id="parent-new-requests">
-            <div class="card">
-                <div class="card-header">
-                    <h3>New Parent Requests</h3>
-                    <span style="font-size: 14px; color: #6B7280;">Latest requests submitted by parents</span>
-                </div>
-                <div class="table-wrapper">
-                    <table class="data-table" id="parentNewRequestsTable">
-                        <thead>
-                            <tr>
-                                <th>Parent</th>
-                                <th>Subject</th>
-                                <th>Priority</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- New Driver Requests Page -->
-        <div class="page" id="driver-new-requests">
-            <div class="card">
-                <div class="card-header">
-                    <h3>New Driver Requests</h3>
-                    <span style="font-size: 14px; color: #6B7280;">Latest requests submitted by drivers</span>
-                </div>
-                <div class="table-wrapper">
-                    <table class="data-table" id="driverNewRequestsTable">
-                        <thead>
-                            <tr>
-                                <th>Driver</th>
-                                <th>Subject</th>
-                                <th>Priority</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
         <!-- Financials Page -->
         <div class="page" id="financials">
             <div class="card">
@@ -900,6 +1024,55 @@
                                 <th>Amount</th>
                                 <th>Entered By</th>
                                 <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Payments System</h3>
+                    <div class="card-actions">
+                        <button class="btn-secondary btn-compact" onclick="exportTableToCsv('paymentsTable', 'payments')">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                        <button class="btn-primary btn-compact" onclick="exportTableToPdf('paymentsTable', 'payments')">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="filters" style="margin-bottom: 20px;">
+                    <div class="filter-item">
+                        <label for="paymentStatusFilter" class="form-label">Payment Status</label>
+                        <select id="paymentStatusFilter" class="form-control">
+                            <option value="all">All</option>
+                            <option value="paid">Paid</option>
+                            <option value="pending">Pending</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="paymentPeriodFilter" class="form-label">Payment Date</label>
+                        <select id="paymentPeriodFilter" class="form-control">
+                            <option value="all">All Time</option>
+                            <option value="this_month">This Month</option>
+                            <option value="last_month">Last Month</option>
+                            <option value="this_year">This Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="paymentsTable">
+                        <thead>
+                            <tr>
+                                <th>Parent Name</th>
+                                <th>Student</th>
+                                <th>Amount</th>
+                                <th>Payment Status</th>
+                                <th>Payment Date</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1079,6 +1252,84 @@
                     </table>
                 </div>
             </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Real-Time Attendance Tracking</h3>
+                    <div class="card-actions">
+                        <button class="btn-secondary btn-compact" onclick="exportTableToCsv('attendanceRealtimeTable', 'attendance_realtime')">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                        <button class="btn-primary btn-compact" onclick="exportTableToPdf('attendanceRealtimeTable', 'attendance_realtime')">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="attendanceRealtimeTable">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Bus</th>
+                                <th>Pickup Status</th>
+                                <th>Drop-off Status</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceRealtimeBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Attendance Management</h3>
+                    <div class="card-actions">
+                        <button class="btn-secondary btn-compact" onclick="exportTableToCsv('attendanceTable', 'attendance_records')">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                        <button class="btn-primary btn-compact" onclick="exportTableToPdf('attendanceTable', 'attendance_records')">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="filters" style="margin-bottom: 20px;">
+                    <div class="filter-item">
+                        <label for="attendancePickupFilter" class="form-label">Pickup Status</label>
+                        <select id="attendancePickupFilter" class="form-control">
+                            <option value="all">All</option>
+                            <option value="picked">Picked Up</option>
+                            <option value="pending">Pending</option>
+                            <option value="missed">Missed</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="attendanceDropoffFilter" class="form-label">Drop-off Status</label>
+                        <select id="attendanceDropoffFilter" class="form-control">
+                            <option value="all">All</option>
+                            <option value="dropped">Dropped</option>
+                            <option value="pending">Pending</option>
+                            <option value="missed">Missed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="attendanceTable">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Bus Number</th>
+                                <th>Pickup Status</th>
+                                <th>Drop-off Status</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- Trips / Routes Page -->
@@ -1134,10 +1385,45 @@
             <div class="card">
                 <div class="card-header">
                     <h3>Notification Management</h3>
-                    <button class="btn-primary" onclick="sendNotification()">
+                    <button class="btn-primary" onclick="focusBroadcastForm()">
                         <i class="fas fa-plus"></i> Send Notification
                     </button>
                 </div>
+                <form id="broadcastForm" class="filters" style="margin-bottom: 20px;">
+                    <div class="filter-item" style="flex: 1 1 220px;">
+                        <label for="broadcastTitle" class="form-label">Title</label>
+                        <input id="broadcastTitle" class="form-control" type="text" placeholder="Enter title" required>
+                    </div>
+                    <div class="filter-item" style="flex: 1 1 220px;">
+                        <label for="broadcastType" class="form-label">Type</label>
+                        <select id="broadcastType" class="form-control">
+                            <option value="general">General</option>
+                            <option value="delay">Delay</option>
+                            <option value="route-change">Route Change</option>
+                            <option value="emergency">Emergency</option>
+                        </select>
+                    </div>
+                    <div class="filter-item" style="flex: 1 1 220px;">
+                        <label for="broadcastRecipients" class="form-label">Recipients</label>
+                        <div class="form-control" style="display:flex; gap:12px; align-items:center; padding:10px 12px;">
+                            <label style="display:flex; gap:6px; align-items:center; font-size:13px;">
+                                <input type="checkbox" id="broadcastToParents" checked> Parents
+                            </label>
+                            <label style="display:flex; gap:6px; align-items:center; font-size:13px;">
+                                <input type="checkbox" id="broadcastToDrivers" checked> Drivers
+                            </label>
+                        </div>
+                    </div>
+                    <div class="filter-item" style="flex: 1 1 100%;">
+                        <label for="broadcastMessage" class="form-label">Message</label>
+                        <textarea id="broadcastMessage" class="form-control" rows="3" placeholder="Write your message..." required></textarea>
+                    </div>
+                    <div class="filter-item" style="flex: 1 1 100%; display:flex; justify-content:flex-end;">
+                        <button type="button" class="btn-primary" onclick="sendBroadcastNotification()">
+                            <i class="fas fa-paper-plane"></i> Send To Users
+                        </button>
+                    </div>
+                </form>
                 <div class="filters" style="margin-bottom: 20px;">
                     <div class="filter-item">
                         <label for="notificationTypeFilter" class="form-label">Type</label>
@@ -1147,6 +1433,7 @@
                             <option value="delay">Delay</option>
                             <option value="route-change">Route Change</option>
                             <option value="general">General</option>
+                            <option value="message">Message</option>
                         </select>
                     </div>
                     <div class="filter-item">
@@ -1168,10 +1455,112 @@
                                 <th>Recipients</th>
                                 <th>Sent Date</th>
                                 <th>Status</th>
+                                <th>Reply</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Emergency Alerts</h3>
+                    <div class="card-actions">
+                        <button class="btn-secondary btn-compact" onclick="exportTableToCsv('emergencyAlertsTable', 'emergency_alerts')">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="filters" style="margin-bottom: 20px;">
+                    <div class="filter-item">
+                        <label for="emergencyTypeFilter" class="form-label">Emergency Type</label>
+                        <select id="emergencyTypeFilter" class="form-control">
+                            <option value="all">All</option>
+                            <option value="breakdown">Breakdown</option>
+                            <option value="accident">Accident</option>
+                            <option value="delay">Delay</option>
+                            <option value="medical">Medical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="emergencyAlertsTable">
+                        <thead>
+                            <tr>
+                                <th>Emergency Type</th>
+                                <th>Bus Number</th>
+                                <th>Driver</th>
+                                <th>Location</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Logs Page -->
+        <div class="page" id="emergency-logs">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Emergency Logs</h3>
+                    <div class="card-actions">
+                        <button class="btn-secondary btn-compact" onclick="exportTableToCsv('emergencyLogsTable', 'emergency_logs')">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                        <button class="btn-primary btn-compact" onclick="exportTableToPdf('emergencyLogsTable', 'emergency_logs')">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="filters" style="margin-bottom: 20px;">
+                    <div class="filter-item">
+                        <label for="emergencyLogDateFilter" class="form-label">Date</label>
+                        <input type="date" id="emergencyLogDateFilter" class="form-control">
+                    </div>
+                    <div class="filter-item">
+                        <label for="emergencyLogBusFilter" class="form-label">Bus</label>
+                        <select id="emergencyLogBusFilter" class="form-control">
+                            <option value="all">All Buses</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="emergencyLogDriverFilter" class="form-label">Driver</label>
+                        <select id="emergencyLogDriverFilter" class="form-control">
+                            <option value="all">All Drivers</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="emergencyLogTypeFilter" class="form-label">Type</label>
+                        <select id="emergencyLogTypeFilter" class="form-control">
+                            <option value="all">All Types</option>
+                            <option value="breakdown">Breakdown</option>
+                            <option value="accident">Accident</option>
+                            <option value="medical">Medical</option>
+                            <option value="delay">Delay</option>
+                            <option value="general">General</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="emergencyLogsTable">
+                        <thead>
+                            <tr>
+                                <th>Bus</th>
+                                <th>Driver</th>
+                                <th>Location</th>
+                                <th>Type</th>
+                                <th>Time</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emergencyLogsBody">
                             <!-- Populated by JS -->
                         </tbody>
                     </table>
@@ -1683,6 +2072,18 @@
                             </select>
                         </div>
                         <div class="setting-item">
+                            <label for="qrZoneSelect">Zone/Region</label>
+                            <select id="qrZoneSelect" class="form-control">
+                                <option value="">Select zone...</option>
+                                <option value="zone_a">Zone A - Downtown</option>
+                                <option value="zone_b">Zone B - Suburb North</option>
+                                <option value="zone_c">Zone C - Suburb East</option>
+                                <option value="zone_d">Zone D - Suburb West</option>
+                                <option value="zone_e">Zone E - Industrial Area</option>
+                                <option value="zone_f">Zone F - Residential</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
                             <label for="qrTripType">Trip Type</label>
                             <select id="qrTripType" class="form-control">
                                 <option value="pickup">Pickup</option>
@@ -1746,7 +2147,7 @@
                     <div class="profile-banner">
                         <div class="profile-banner-content">
                             <div class="profile-avatar-wrapper">
-                                <img src="https://source.unsplash.com/400x400/?egyptian,man,portrait&sig=11" alt="Admin User" class="profile-avatar-img">
+                                <img src="../../IMAGE/ADMIN.png" alt="Admin User" class="profile-avatar-img">
                             </div>
                             <div class="profile-info">
                                 <h1 class="profile-name">Admin User</h1>
@@ -2060,4 +2461,3 @@
     <script src="../js/admin.js"></script>
 </body>
 </html>
-

@@ -17,6 +17,13 @@
     --dark: #060315;
 }
 
+img,
+video {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -370,6 +377,36 @@
     color: #FF3E41;
     box-shadow: 0 4px 15px rgba(255, 62, 65, 0.5);
     transform: translateY(-2px);
+}
+
+@media (max-width: 991.98px) {
+    .navbar .buttons {
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+        margin: 12px 0;
+        justify-content: center;
+    }
+
+    .navbar .buttons a:first-child,
+    .navbar .buttons a:last-child {
+        width: 100%;
+        max-width: 240px;
+    }
+
+    .lang-wrapper {
+        width: 100%;
+        margin: 8px 0 0;
+        display: flex;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .navbar .buttons a:first-child,
+    .navbar .buttons a:last-child {
+        max-width: 100%;
+    }
 }
 
 

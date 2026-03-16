@@ -86,6 +86,18 @@
                 <i class="fas fa-headset"></i>
                 <span>Support</span>
             </a>
+            <a href="#" class="nav-link" data-page="trip-history" role="button" aria-pressed="false">
+                <i class="fas fa-history"></i>
+                <span>Trip History</span>
+            </a>
+            <a href="#" class="nav-link" data-page="emergency-alerts" role="button" aria-pressed="false">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span>Emergency Alerts</span>
+            </a>
+            <a href="#" class="nav-link" data-page="profile-settings" role="button" aria-pressed="false">
+                <i class="fas fa-user-cog"></i>
+                <span>Profile & Settings</span>
+            </a>
             <a href="parent-request.html" class="nav-link external-link" role="button" aria-pressed="false">
                 <i class="fas fa-file-lines"></i>
                 <span>Parent Requests</span>
@@ -117,7 +129,7 @@
                     <span class="badge">3</span>
                 </button>
                 <a class="profile" href="#" onclick="event.preventDefault(); openParentProfileModal();" aria-label="Open Amira profile">
-                    <img src="https://source.unsplash.com/200x200/?egyptian,woman,portrait&sig=13" alt="Parent Profile">
+                    <img src="../../IMAGE/ADMIN.png" alt="Parent Profile">
                     <span>Amira mohamed</span>
                 </a>
             </div>
@@ -376,6 +388,24 @@
                                 <p>Days Absent</p>
                             </div>
                         </div>
+                        <div class="card stat-card">
+                            <div class="stat-icon purple">
+                                <i class="fas fa-person-circle-xmark"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="missedPickupCount">1</h3>
+                                <p>Missed Pickups</p>
+                            </div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-person-walking-arrow-right"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="missedDropoffCount">0</h3>
+                                <p>Missed Drop-offs</p>
+                            </div>
+                        </div>
                     </div>
                     <div class="attendance-table-wrapper">
                         <table class="data-table">
@@ -551,6 +581,127 @@
             </div>
         </div>
 
+        <!-- Trip History Page -->
+        <div class="page" id="trip-history">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-history"></i> Trip History</h3>
+                    <div class="card-actions">
+                        <button class="btn-secondary btn-compact" onclick="exportTableToCsv('parentTripHistoryTable', 'trip_history')">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                        <button class="btn-primary btn-compact" onclick="exportTableToPdf('parentTripHistoryTable', 'trip_history')">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="filters" style="margin-bottom: 20px;">
+                    <div class="filter-item">
+                        <label for="tripHistoryDateFilter" class="form-label">Date</label>
+                        <input type="date" id="tripHistoryDateFilter" class="form-control">
+                    </div>
+                    <div class="filter-item">
+                        <label for="tripHistoryRouteFilter" class="form-label">Route</label>
+                        <select id="tripHistoryRouteFilter" class="form-control">
+                            <option value="all">All Routes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="parentTripHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Bus</th>
+                                <th>Driver</th>
+                                <th>Pickup Time</th>
+                                <th>Drop-off Time</th>
+                                <th>Route</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tripHistoryBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Alerts Page -->
+        <div class="page" id="emergency-alerts">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-triangle-exclamation"></i> Emergency Alerts</h3>
+                    <span class="status-badge emergency" id="emergencyAlertsBadge">0 Active</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="emergencyAlertsTable">
+                        <thead>
+                            <tr>
+                                <th>Bus</th>
+                                <th>Driver</th>
+                                <th>Location</th>
+                                <th>Type</th>
+                                <th>Time</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emergencyAlertsBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile & Settings Page -->
+        <div class="page" id="profile-settings">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-user-cog"></i> Profile & Settings</h3>
+                </div>
+                <div class="profile-settings-grid">
+                    <div class="card">
+                        <h4>Parent Information</h4>
+                        <div class="form-group">
+                            <label for="parentName">Full Name</label>
+                            <input id="parentName" class="form-control" type="text" value="Amira Mohamed" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="parentPhone">Phone</label>
+                            <input id="parentPhone" class="form-control" type="tel" value="+20 100 123 4567" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="parentEmail">Email</label>
+                            <input id="parentEmail" class="form-control" type="email" value="amira.parent@bustracker.com" required>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>Account Settings</h4>
+                        <div class="form-group">
+                            <label for="parentPassword">Change Password</label>
+                            <input id="parentPassword" class="form-control" type="password" placeholder="New password">
+                        </div>
+                        <div class="form-group">
+                            <label class="overlay-toggle">
+                                <input type="checkbox" id="emailAlerts" checked>
+                                Email Notifications
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="overlay-toggle">
+                                <input type="checkbox" id="smsAlerts" checked>
+                                SMS Notifications
+                            </label>
+                        </div>
+                        <button class="btn-primary" type="button" onclick="saveParentSettings()">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <footer class="site-footer" role="contentinfo">
@@ -699,7 +850,7 @@
             </button>
             <div class="profile-modal-header">
                 <div class="profile-modal-avatar">
-                    <img src="https://source.unsplash.com/400x400/?egyptian,woman,portrait&sig=13" alt="Parent Profile">
+                    <img src="../../IMAGE/ADMIN.png" alt="Parent Profile">
                     <div class="profile-status-badge active">
                         <i class="fas fa-circle"></i>
                         <span>Active</span>
@@ -1282,4 +1433,3 @@
     <script src="../js/script.js"></script>
 </body>
 </html>
-

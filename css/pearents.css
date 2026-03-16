@@ -133,6 +133,143 @@ body {
     outline: none;
 }
 
+.input-group {
+    position: relative;
+    width: 100%;
+}
+
+.input-group i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #FF3E41;
+    font-size: 16px;
+    pointer-events: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.input-group textarea,
+.input-group input,
+.input-group select {
+    padding-left: 40px;
+}
+
+.input-group.textarea i {
+    top: 14px;
+    transform: none;
+}
+
+.input-group:focus-within i {
+    color: #ff2a2d;
+    animation: icon-bounce 0.35s ease;
+}
+
+.input-group.textarea:focus-within i {
+    transform: translateX(2px);
+    animation: icon-slide 0.35s ease;
+}
+
+@keyframes icon-bounce {
+    0% {
+        transform: translateY(-50%) scale(1);
+    }
+    40% {
+        transform: translateY(-55%) scale(1.08);
+    }
+    100% {
+        transform: translateY(-50%) scale(1);
+    }
+}
+
+@keyframes icon-slide {
+    0% {
+        transform: translateX(0);
+    }
+    40% {
+        transform: translateX(4px);
+    }
+    100% {
+        transform: translateX(2px);
+    }
+}
+
+/* password strength */
+.password-block {
+    width: 100%;
+}
+
+.password-checklist {
+    margin-top: 8px;
+    background: #fff7f7;
+    border: 1px solid rgba(255, 62, 65, 0.2);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: none;
+}
+
+.password-block:focus-within .password-checklist {
+    display: block;
+}
+
+.strength-meter {
+    position: relative;
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.strength-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff3e41, #ff8a00);
+    transition: width 0.2s ease;
+}
+
+.strength-text {
+    position: absolute;
+    right: 8px;
+    top: -18px;
+    font-size: 11px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.password-checklist ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.password-checklist li {
+    padding-left: 18px;
+    position: relative;
+}
+
+.password-checklist li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #ff3e41;
+}
+
+.password-checklist li.met {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.password-checklist li.met::before {
+    content: "✓";
+    color: #2ecc71;
+}
+
 textarea {
     width: 100%;
     min-height: 150px;
@@ -283,38 +420,50 @@ button.hidden {
 }
 
 /* toggle-panel button styling */
-.toggle-panel button {
-    padding: 14px 40px;
-    background: var(--primary-color, #FF3E41);
+.toggle-panel button,
+#login,
+#register {
+    padding: 14px 42px;
+    background: linear-gradient(135deg, #FF3E41, #FF6B6D);
     color: #fff;
-    border: none;
-    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
     font-size: 15px;
     font-weight: 700;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
     text-transform: uppercase;
     cursor: pointer;
     margin-top: 20px;
-    box-shadow: 0 4px 15px rgba(255, 62, 65, 0.3);
-    transition: all 0.3s ease;
+    box-shadow: 0 10px 24px rgba(255, 62, 65, 0.35);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
-.toggle-panel button:hover {
-    background: rgba(255, 62, 65, 0.9);
+.toggle-panel button:hover,
+#login:hover,
+#register:hover {
+    background: linear-gradient(135deg, #FF4E50, #FF7A7C);
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(255, 62, 65, 0.5);
+    box-shadow: 0 16px 30px rgba(255, 62, 65, 0.45);
 }
-.toggle-panel button:active {
+.toggle-panel button:active,
+#login:active,
+#register:active {
     transform: translateY(-1px);
-    box-shadow: 0 2px 10px rgba(255, 62, 65, 0.4);
+    box-shadow: 0 8px 16px rgba(255, 62, 65, 0.35);
+}
+.toggle-panel button:focus-visible,
+#login:focus-visible,
+#register:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 3px;
 }
 .toggle-panel button.hidden {
-    background-color: transparent;
+    background: transparent;
     border: 2px solid #fff;
     box-shadow: none;
 }
 .toggle-panel button.hidden:hover {
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 6px 18px rgba(255, 255, 255, 0.2);
 }
 
 .verify-container {

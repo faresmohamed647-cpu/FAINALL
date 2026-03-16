@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/pearents.css">
     <link rel="stylesheet" href="css/rtl.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <title>join-student</title>
 </head>
 
@@ -14,97 +15,234 @@
 
         <!-- ===== Student Form ===== -->
         <div class="form-container join-student-container">
-            <form action="#">
-                <h1>Join as a Student</h1>
+    <form action="#" data-request-role="parent">
+        <h1>Join as a Student</h1>
 
-                <label>Address</label>
-                <input type="text" required>
+        <label>Address</label>
+        <div class="input-group">
+            <i class='bx bxs-home'></i>
+            <input type="text" name="student_address" autocomplete="street-address" required>
+        </div>
 
-                <label>State</label>
-                <select>
-                <option value="">select</option>
-                <option>Arab Republic of Egypt</option>
-                <option>Kingdom of Saudi Arabia</option>
-            </select>
+        <label>State</label>
+        <div class="input-group">
+            <i class='bx bxs-map'></i>
+            <select name="student_state" autocomplete="address-level1">
+            <option value="">select</option>
+            <option>Arab Republic of Egypt</option>
+            <option>Kingdom of Saudi Arabia</option>
+        </select>
+        </div>
 
-                <label>Phone</label>
-                <input type="text" required>
+        <label>Phone</label>
+        <div class="input-group">
+            <i class='bx bxs-phone'></i>
+            <input type="tel" name="student_phone" autocomplete="tel" inputmode="tel" required>
+        </div>
 
-                <label>Relationship (with the school)</label>
-                <select>
-                <option value="">select</option>
-                <option>Father</option>
-                <option>Mother</option>
-            </select>
+        <label>Relationship (with the school)</label>
+        <div class="input-group">
+            <i class='bx bxs-user-circle'></i>
+            <select name="student_relationship" autocomplete="off">
+            <option value="">select</option>
+            <option>Father</option>
+            <option>Mother</option>
+        </select>
+        </div>
 
-                <label>Number of students</label>
-                <input type="text" required>
+        <label>Number of students</label>
+        <div class="input-group">
+            <i class='bx bxs-group'></i>
+            <input type="number" name="student_count" inputmode="numeric" min="1" required>
+        </div>
 
-                <label>Degree</label>
-                <input type="text" required>
+        <label>Degree</label>
+        <div class="input-group">
+            <i class='bx bxs-graduation'></i>
+            <input type="text" name="student_degree" autocomplete="off" required>
+        </div>
 
-                <label>Education system</label>
-                <input type="text" required>
+        <label>Education system</label>
+        <div class="input-group">
+            <i class='bx bxs-book'></i>
+            <input type="text" name="student_education_system" autocomplete="off" required>
+        </div>
 
-                <label>School name</label>
-                <input type="text" required>
+        <label>School name</label>
+        <div class="input-group">
+            <i class='bx bxs-building'></i>
+            <input type="text" name="school_name" autocomplete="organization" required>
+        </div>
 
-                <label>School address</label>
-                <input type="text" required>
+        <label>School address</label>
+        <div class="input-group">
+            <i class='bx bxs-map'></i>
+            <input type="text" name="school_address" autocomplete="street-address" required>
+        </div>
 
-                <label>School starting</label>
-                <input type="text" required>
+        <label>School starting</label>
+        <div class="input-group">
+            <i class='bx bxs-calendar'></i>
+            <input type="text" name="school_starting" autocomplete="off" required>
+        </div>
 
-                <label>Message</label>
-                <textarea required></textarea>
+        <label>Email</label>
+        <div class="input-group">
+            <i class='bx bxs-envelope'></i>
+            <input type="email" name="student_email" data-email="student" autocomplete="email" required>
+        </div>
 
-                <button type="submit">Join Now</button>
-                <p class="existing-account"><button type="button" onclick="location.href='verify.html?type=student'">Do you already have an account?</button></p>
-            </form>
+        <div class="password-block" data-block="student">
+            <label>Password</label>
+            <div class="input-group">
+                <i class='bx bxs-lock-alt'></i>
+                <input type="password" name="student_password" data-password="student" autocomplete="new-password" required>
+            </div>
+
+            <label>Confirm password</label>
+            <div class="input-group">
+                <i class='bx bxs-lock-alt'></i>
+                <input type="password" name="student_password_confirm" data-confirm="student" autocomplete="new-password" required>
+            </div>
+
+            <div class="password-checklist" data-checklist="student">
+                <div class="strength-meter">
+                    <div class="strength-bar" data-bar="student"></div>
+                    <span class="strength-text" data-text="student">0%</span>
+                </div>
+                <ul>
+                    <li data-rule="length8">At least 8 characters</li>
+                    <li data-rule="length12">12+ characters (stronger)</li>
+                    <li data-rule="uppercase">At least 1 uppercase letter</li>
+                    <li data-rule="lowercase">At least 1 lowercase letter</li>
+                    <li data-rule="number">At least 1 number</li>
+                    <li data-rule="special">At least 1 special character</li>
+                    <li data-rule="no-spaces">No spaces</li>
+                    <li data-rule="match">Passwords match</li>
+                </ul>
+            </div>
+        </div>
+
+        <label>Message</label>
+        <div class="input-group textarea">
+            <i class='bx bxs-message'></i>
+            <textarea name="student_message" autocomplete="off" required></textarea>
+        </div>
+
+        <button type="submit">Join Now</button>
+        <p class="existing-account"><button type="button" onclick="location.href='verify.html?type=student'">Do you already have an account?</button></p>
+    </form>
         </div>
 
         <!-- ===== Car Owner Form ===== -->
         <div class="form-container join-us">
-            <form>
+            <form data-request-role="driver">
                 <h1>Join as a Car Owner</h1>
 
                 <label>State</label>
-                <select>
-                <option value="">select</option>
-                <option>Arab Republic of Egypt</option>
-                <option>Kingdom of Saudi Arabia</option>
-            </select>
+                <div class="input-group">
+                    <i class='bx bxs-map'></i>
+                    <select name="owner_state" autocomplete="address-level1">
+             <option value="">select</option>
+             <option>Arab Republic of Egypt</option>
+             <option>Kingdom of Saudi Arabia</option>
+             </select>
+                </div>
 
-                <label>Your full name</label>
-                <input type="text" required>
+             <label>Your full name</label>
+             <div class="input-group">
+                <i class='bx bxs-user'></i>
+                <input type="text" name="owner_full_name" autocomplete="name" required>
+             </div>
 
-                <label>Your age</label>
-                <input type="text" required>
+             <label>Your age</label>
+             <div class="input-group">
+                <i class='bx bxs-cake'></i>
+                <input type="number" name="owner_age" inputmode="numeric" min="18" required>
+             </div>
 
-                <label>Gender</label>
-                <select>
-                <option value="">select</option>
-                <option>Male</option>
-                <option>Female</option>
-            </select>
+             <label>Gender</label>
+             <div class="input-group">
+                <i class='bx bxs-gender-female'></i>
+                <select name="owner_gender" autocomplete="sex">
+    <option value="">select</option>
+    <option>Male</option>
+    <option>Female</option>
+                </select>
+             </div>
 
-                <label>Mobile number</label>
-                <input type="text" required>
+<label>Mobile number</label>
+<div class="input-group">
+    <i class='bx bxs-phone'></i>
+    <input type="tel" name="owner_phone" autocomplete="tel" inputmode="tel" required>
+</div>
 
-                <label>Car type</label>
-                <input type="text" required>
+<label>Car type</label>
+<div class="input-group">
+    <i class='bx bxs-car'></i>
+    <input type="text" name="car_type" autocomplete="off" required>
+</div>
 
-                <label>Car model</label>
-                <input type="text" required>
+<label>Car model</label>
+<div class="input-group">
+    <i class='bx bxs-car'></i>
+    <input type="text" name="car_model" autocomplete="off" required>
+</div>
 
-                <label>Home address</label>
-                <input type="text" required>
+<label>Home address</label>
+<div class="input-group">
+    <i class='bx bxs-home'></i>
+    <input type="text" name="owner_address" autocomplete="street-address" required>
+</div>
 
-                <label>Car license plate number</label>
-                <input type="text" required>
+<label>Car license plate number</label>
+<div class="input-group">
+    <i class='bx bxs-id-card'></i>
+    <input type="text" name="car_plate" autocomplete="off" required>
+</div>
 
-                <label>Message</label>
-                <textarea required></textarea>
+<label>Email</label>
+<div class="input-group">
+    <i class='bx bxs-envelope'></i>
+    <input type="email" name="owner_email" data-email="car-owner" autocomplete="email" required>
+</div>
+
+<div class="password-block" data-block="car-owner">
+    <label>Password</label>
+    <div class="input-group">
+        <i class='bx bxs-lock-alt'></i>
+        <input type="password" name="owner_password" data-password="car-owner" autocomplete="new-password" required>
+    </div>
+
+    <label>Confirm password</label>
+    <div class="input-group">
+        <i class='bx bxs-lock-alt'></i>
+        <input type="password" name="owner_password_confirm" data-confirm="car-owner" autocomplete="new-password" required>
+    </div>
+
+    <div class="password-checklist" data-checklist="car-owner">
+        <div class="strength-meter">
+            <div class="strength-bar" data-bar="car-owner"></div>
+            <span class="strength-text" data-text="car-owner">0%</span>
+        </div>
+        <ul>
+            <li data-rule="length8">At least 8 characters</li>
+            <li data-rule="length12">12+ characters (stronger)</li>
+            <li data-rule="uppercase">At least 1 uppercase letter</li>
+            <li data-rule="lowercase">At least 1 lowercase letter</li>
+            <li data-rule="number">At least 1 number</li>
+            <li data-rule="special">At least 1 special character</li>
+            <li data-rule="no-spaces">No spaces</li>
+            <li data-rule="match">Passwords match</li>
+        </ul>
+    </div>
+</div>
+
+<label>Message</label>
+<div class="input-group textarea">
+    <i class='bx bxs-message'></i>
+    <textarea name="owner_message" autocomplete="off" required></textarea>
+</div>
 
                 <button type="submit">Subscribe Now</button>
                 <button type="submit">Ignorance</button>
@@ -138,5 +276,3 @@
 
 <!-- Language Support -->
 <script src='js/language.js'></script>
-
-

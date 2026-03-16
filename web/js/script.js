@@ -6,10 +6,37 @@ const menuToggle = document.getElementById('menuToggle');
 const sidebar = document.querySelector('.sidebar');
 const themeToggleBtn = document.getElementById('themeToggle');
 const THEME_STORAGE_KEY = 'safestep-theme';
+const BROADCAST_STORAGE_KEY = 'safestep-broadcasts';
 const MOBILE_BREAKPOINT = 768;
 const sidebarOverlay = document.createElement('div');
 sidebarOverlay.className = 'sidebar-overlay';
 document.body.appendChild(sidebarOverlay);
+
+let toastCount = 0;
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.style.top = `${20 + (toastCount * 12)}px`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'triangle-exclamation' : 'info-circle'}"></i>
+        <span>${message}</span>
+        <button class="toast-close" type="button"><i class="fas fa-times"></i></button>
+    `;
+    document.body.appendChild(toast);
+    toastCount += 1;
+
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+        toast.remove();
+        toastCount = Math.max(0, toastCount - 1);
+    });
+
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+            toastCount = Math.max(0, toastCount - 1);
+        }
+    }, 4000);
+}
 
 function isMobileView() {
     return window.innerWidth <= MOBILE_BREAKPOINT;
@@ -89,12 +116,19 @@ navLinks.forEach(link => {
             startGpsUpdates();
         } else if (pageId === 'attendance') {
             renderAttendanceTable();
+            updateAttendanceSummary();
         } else if (pageId === 'payments') {
             renderPaymentsTable();
             renderPaymentDiscounts();
             renderPackagesAndFeaturesFromPrice();
             renderFamilyOffers();
             initFamilySavingsCalculator();
+        } else if (pageId === 'trip-history') {
+            renderTripHistory();
+        } else if (pageId === 'emergency-alerts') {
+            renderEmergencyAlerts();
+        } else if (pageId === 'profile-settings') {
+            initProfileSettings();
         }
         
         if (isMobileView()) setMobileSidebarState(false);
@@ -381,6 +415,7 @@ function renderRecentActivity() {
 // Notifications Data (default; overridden by API if available)
 let notifications = [
     {
+        id: 1001,
         type: 'success',
         icon: 'fa-check-circle',
         title: 'Child Picked Up',
@@ -388,6 +423,16 @@ let notifications = [
         time: '5 minutes ago'
     },
     {
+        id: 1005,
+        type: 'message',
+        icon: 'fa-comment-dots',
+        title: 'New Message from Support',
+        message: 'We received your inquiry and are ready to help. How can we assist you further?',
+        time: 'Just now',
+        canReply: true
+    },
+    {
+        id: 1002,
         type: 'success',
         icon: 'fa-check-circle',
         title: 'Child Picked Up',
@@ -395,6 +440,7 @@ let notifications = [
         time: '5 minutes ago'
     },
     {
+        id: 1003,
         type: 'info',
         icon: 'fa-info-circle',
         title: 'Bus Departed',
@@ -402,6 +448,7 @@ let notifications = [
         time: '30 minutes ago'
     },
     {
+        id: 1004,
         type: 'warning',
         icon: 'fa-exclamation-triangle',
         title: 'Slight Delay',
@@ -410,13 +457,60 @@ let notifications = [
     }
 ];
 
+function getBroadcastIcon(type) {
+    if (type === 'emergency') return 'fa-triangle-exclamation';
+    if (type === 'delay') return 'fa-clock';
+    if (type === 'route-change') return 'fa-route';
+    return 'fa-info-circle';
+}
+
+function loadBroadcastNotifications(role) {
+    try {
+        const raw = localStorage.getItem(BROADCAST_STORAGE_KEY);
+        if (!raw) return;
+        const broadcasts = JSON.parse(raw);
+        if (!Array.isArray(broadcasts)) return;
+
+        const existingIds = new Set(notifications.map(n => n.id));
+        broadcasts
+            .filter(b => b.target === role)
+            .forEach(b => {
+                if (existingIds.has(b.id)) return;
+                notifications.unshift({
+                    id: b.id,
+                    type: b.type === 'emergency' ? 'warning' : b.type === 'delay' ? 'warning' : 'info',
+                    icon: getBroadcastIcon(b.type),
+                    title: b.title,
+                    message: b.message,
+                    time: new Date(b.createdAt).toLocaleString()
+                });
+            });
+    } catch (err) {
+        console.warn('Failed to load broadcast notifications', err);
+    }
+}
+
 function renderNotifications() {
     const notificationsList = document.getElementById('notificationsList');
     notificationsList.innerHTML = '';
     
     notifications.forEach(notification => {
+        const isMessage = notification.type === 'message' || notification.kind === 'message' || notification.category === 'message' || notification.canReply === true;
         const notificationDiv = document.createElement('div');
-        notificationDiv.className = 'notification-item ' + notification.type;
+        notificationDiv.className = 'notification-item ' + notification.type + (isMessage ? ' message' : '');
+        const replyMarkup = isMessage ? `
+            <div class="notification-reply">
+                <label class="sr-only" for="reply-${notification.id}">Reply</label>
+                <textarea class="form-control reply-input" id="reply-${notification.id}" rows="2" placeholder="Write a reply..."></textarea>
+                <div class="reply-actions">
+                    <button class="btn-secondary btn-reply-cancel" type="button" data-id="${notification.id}">Clear</button>
+                    <button class="btn-primary btn-reply-send" type="button" data-id="${notification.id}">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                    <span class="reply-status" id="reply-status-${notification.id}" aria-live="polite"></span>
+                </div>
+            </div>
+        ` : '';
         notificationDiv.innerHTML = `
             <div class="notification-icon-wrapper">
                 <i class="fas ${notification.icon}"></i>
@@ -425,9 +519,40 @@ function renderNotifications() {
                 <h4>${notification.title}</h4>
                 <p>${notification.message}</p>
                 <span class="time">${notification.time}</span>
+                ${replyMarkup}
             </div>
         `;
         notificationsList.appendChild(notificationDiv);
+    });
+}
+
+const notificationsList = document.getElementById('notificationsList');
+if (notificationsList) {
+    notificationsList.addEventListener('click', (event) => {
+        const sendBtn = event.target.closest('.btn-reply-send');
+        const clearBtn = event.target.closest('.btn-reply-cancel');
+        if (!sendBtn && !clearBtn) return;
+
+        const id = (sendBtn || clearBtn).getAttribute('data-id');
+        const input = document.getElementById(`reply-${id}`);
+        const status = document.getElementById(`reply-status-${id}`);
+        if (!input) return;
+
+        if (clearBtn) {
+            input.value = '';
+            if (status) status.textContent = '';
+            return;
+        }
+
+        const message = input.value.trim();
+        if (!message) {
+            if (status) status.textContent = 'Please write a reply first.';
+            return;
+        }
+
+        input.value = '';
+        if (status) status.textContent = 'Reply sent.';
+        setTimeout(() => { if (status) status.textContent = ''; }, 2000);
     });
 }
 
@@ -463,6 +588,7 @@ document.getElementById('addNotificationBtn').addEventListener('click', () => {
 });
 
 // Initialize notifications
+loadBroadcastNotifications('parent');
 renderNotifications();
 
 async function syncNotificationsFromApi() {
@@ -747,6 +873,11 @@ function renderAttendanceTable() {
     if (!tbody) return;
     
     tbody.innerHTML = '';
+    if (attendanceData.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No attendance records available.</td></tr>';
+        updateAttendanceSummary();
+        return;
+    }
     attendanceData.forEach(record => {
         const tr = document.createElement('tr');
         const statusClass = record.status === 'Present' ? 'active' : 'inactive';
@@ -759,6 +890,16 @@ function renderAttendanceTable() {
         `;
         tbody.appendChild(tr);
     });
+    updateAttendanceSummary();
+}
+
+function updateAttendanceSummary() {
+    const missedPickupCount = attendanceData.filter(record => record.pickupTime === '-' || record.pickupTime === 'Missed').length;
+    const missedDropoffCount = attendanceData.filter(record => record.dropTime === '-' || record.dropTime === 'Missed').length;
+    const missedPickupEl = document.getElementById('missedPickupCount');
+    const missedDropoffEl = document.getElementById('missedDropoffCount');
+    if (missedPickupEl) missedPickupEl.textContent = missedPickupCount;
+    if (missedDropoffEl) missedDropoffEl.textContent = missedDropoffCount;
 }
 
 renderChildrenSections();
@@ -816,6 +957,273 @@ function renderPaymentsTable() {
         tbody.appendChild(tr);
     });
 }
+
+function exportTableToCsv(tableId, filename) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const csv = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        return cells.map(cell => `"${cell.textContent.replace(/\s+/g, ' ').trim().replace(/"/g, '""')}"`).join(',');
+    }).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename || 'export'}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function exportTableToPdf(tableId, filename) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const text = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        return cells.map(cell => cell.textContent.replace(/\s+/g, ' ').trim()).join(' | ');
+    }).join('\n');
+
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename || 'export'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+const tripHistoryData = [
+    { date: '2024-02-19', bus: 'Bus #42', driver: 'Omer Mohamed', pickup: '7:45 AM', dropoff: '8:15 AM', route: 'Route A' },
+    { date: '2024-02-18', bus: 'Bus #42', driver: 'Omer Mohamed', pickup: '7:43 AM', dropoff: '8:12 AM', route: 'Route A' },
+    { date: '2024-02-17', bus: 'Bus #15', driver: 'Mohamed Ali', pickup: '7:50 AM', dropoff: '8:20 AM', route: 'Route B' },
+    { date: '2024-02-16', bus: 'Bus #15', driver: 'Mohamed Ali', pickup: '7:55 AM', dropoff: '8:25 AM', route: 'Route B' }
+];
+
+function populateTripHistoryFilters() {
+    const routeFilter = document.getElementById('tripHistoryRouteFilter');
+    if (!routeFilter) return;
+    const current = routeFilter.value || 'all';
+    const routes = [...new Set(tripHistoryData.map(t => t.route))];
+    routeFilter.innerHTML = ['<option value="all">All Routes</option>']
+        .concat(routes.map(route => `<option value="${route}">${route}</option>`))
+        .join('');
+    routeFilter.value = routes.includes(current) ? current : 'all';
+}
+
+function renderTripHistory() {
+    const tbody = document.getElementById('tripHistoryBody');
+    if (!tbody) return;
+    const dateFilter = document.getElementById('tripHistoryDateFilter')?.value || '';
+    const routeFilter = document.getElementById('tripHistoryRouteFilter')?.value || 'all';
+    populateTripHistoryFilters();
+
+    const filtered = tripHistoryData.filter(item => {
+        const dateMatch = !dateFilter || item.date === dateFilter;
+        const routeMatch = routeFilter === 'all' || item.route === routeFilter;
+        return dateMatch && routeMatch;
+    });
+
+    tbody.innerHTML = '';
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No trip history available.</td></tr>';
+        return;
+    }
+    filtered.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${new Date(item.date).toLocaleDateString()}</td>
+            <td><strong>${item.bus}</strong></td>
+            <td>${item.driver}</td>
+            <td>${item.pickup}</td>
+            <td>${item.dropoff}</td>
+            <td>${item.route}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+const emergencyAlertsData = [
+    { id: 1, bus: 'Bus #42', driver: 'Omer Mohamed', location: 'Sidi Bishr, Alexandria', type: 'delay', time: '08:12 AM', notes: 'Traffic congestion' },
+    { id: 2, bus: 'Bus #15', driver: 'Mohamed Ali', location: 'Sporting, Alexandria', type: 'medical', time: '08:20 AM', notes: 'Student felt dizzy' }
+];
+
+function updateEmergencyBadge() {
+    const badge = document.getElementById('emergencyAlertsBadge');
+    if (!badge) return;
+    badge.textContent = `${emergencyAlertsData.length} Active`;
+}
+
+function renderEmergencyAlerts() {
+    const tbody = document.getElementById('emergencyAlertsBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (emergencyAlertsData.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No emergency alerts available.</td></tr>';
+        updateEmergencyBadge();
+        return;
+    }
+    emergencyAlertsData.forEach(alert => {
+        const tr = document.createElement('tr');
+        if (alert.type === 'medical' || alert.type === 'accident') {
+            tr.classList.add('emergency-critical');
+        }
+        tr.innerHTML = `
+            <td><strong>${alert.bus}</strong></td>
+            <td>${alert.driver}</td>
+            <td>${alert.location}</td>
+            <td><span class="status-badge ${alert.type === 'delay' ? 'delay' : 'emergency'}">${alert.type}</span></td>
+            <td>${alert.time}</td>
+            <td>${alert.notes}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    updateEmergencyBadge();
+}
+
+const PARENT_SETTINGS_KEY = 'parent-dashboard-settings';
+let profileSettingsInitialized = false;
+
+function setFieldError(input, message) {
+    if (!input) return;
+    const group = input.closest('.form-group');
+    if (!group) return;
+    let error = group.querySelector('.error-text');
+    if (!error) {
+        error = document.createElement('p');
+        error.className = 'error-text';
+        group.appendChild(error);
+    }
+    input.classList.toggle('field-error', Boolean(message));
+    error.textContent = message || '';
+}
+
+function validateParentField(input) {
+    if (!input) return true;
+    const value = input.value.trim();
+    let message = '';
+
+    if (input.id === 'parentName' && value.length < 2) {
+        message = 'Please enter a full name.';
+    }
+
+    if (input.id === 'parentPhone') {
+        const phoneOk = /^\+?[\d\s()-]{7,}$/.test(value);
+        if (!phoneOk) message = 'Please enter a valid phone number.';
+    }
+
+    if (input.id === 'parentEmail') {
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        if (!emailOk) message = 'Please enter a valid email address.';
+    }
+
+    if (input.id === 'parentPassword' && value.length > 0 && value.length < 6) {
+        message = 'Password must be at least 6 characters.';
+    }
+
+    setFieldError(input, message);
+    return message === '';
+}
+
+function initProfileSettings() {
+    const nameInput = document.getElementById('parentName');
+    const phoneInput = document.getElementById('parentPhone');
+    const emailInput = document.getElementById('parentEmail');
+    const passwordInput = document.getElementById('parentPassword');
+    const emailAlerts = document.getElementById('emailAlerts');
+    const smsAlerts = document.getElementById('smsAlerts');
+
+    if (!nameInput || !phoneInput || !emailInput) return;
+
+    if (!profileSettingsInitialized) {
+        [nameInput, phoneInput, emailInput, passwordInput].filter(Boolean).forEach(input => {
+            input.addEventListener('input', () => validateParentField(input));
+            input.addEventListener('blur', () => validateParentField(input));
+        });
+        profileSettingsInitialized = true;
+    }
+
+    const saved = localStorage.getItem(PARENT_SETTINGS_KEY);
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            if (data.name) nameInput.value = data.name;
+            if (data.phone) phoneInput.value = data.phone;
+            if (data.email) emailInput.value = data.email;
+            if (typeof data.emailAlerts === 'boolean' && emailAlerts) emailAlerts.checked = data.emailAlerts;
+            if (typeof data.smsAlerts === 'boolean' && smsAlerts) smsAlerts.checked = data.smsAlerts;
+        } catch (error) {
+            // ignore corrupted settings
+        }
+    }
+}
+
+function saveParentSettings() {
+    const nameInput = document.getElementById('parentName');
+    const phoneInput = document.getElementById('parentPhone');
+    const emailInput = document.getElementById('parentEmail');
+    const passwordInput = document.getElementById('parentPassword');
+    const emailAlerts = document.getElementById('emailAlerts');
+    const smsAlerts = document.getElementById('smsAlerts');
+
+    const fields = [nameInput, phoneInput, emailInput, passwordInput].filter(Boolean);
+    const isValid = fields.every(field => validateParentField(field));
+    if (!isValid) {
+        showToast('Please fix the highlighted fields before saving.', 'warning');
+        return;
+    }
+
+    const settings = {
+        name: nameInput.value.trim(),
+        phone: phoneInput.value.trim(),
+        email: emailInput.value.trim(),
+        emailAlerts: emailAlerts ? emailAlerts.checked : true,
+        smsAlerts: smsAlerts ? smsAlerts.checked : true
+    };
+
+    localStorage.setItem(PARENT_SETTINGS_KEY, JSON.stringify(settings));
+
+    const profileName = document.querySelector('.topbar .profile span');
+    if (profileName) profileName.textContent = settings.name;
+
+    if (passwordInput) passwordInput.value = '';
+    showToast('Profile settings saved successfully.', 'success');
+}
+
+function bindTripHistoryFilters() {
+    const dateFilter = document.getElementById('tripHistoryDateFilter');
+    const routeFilter = document.getElementById('tripHistoryRouteFilter');
+    if (dateFilter) dateFilter.addEventListener('change', renderTripHistory);
+    if (routeFilter) routeFilter.addEventListener('change', renderTripHistory);
+}
+
+let emergencyAlertId = emergencyAlertsData.length + 1;
+function simulateEmergencyAlert() {
+    if (Math.random() < 0.65) return;
+    const types = ['delay', 'medical', 'accident'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const newAlert = {
+        id: emergencyAlertId++,
+        bus: 'Bus #42',
+        driver: 'Omer Mohamed',
+        location: 'Khaled Ibn El-Walid St, Alexandria',
+        type,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        notes: type === 'delay' ? 'Traffic slowdown reported' : 'Immediate attention required'
+    };
+    emergencyAlertsData.unshift(newAlert);
+    emergencyAlertsData.splice(6);
+    updateEmergencyBadge();
+    if (document.getElementById('emergency-alerts')?.classList.contains('active')) {
+        renderEmergencyAlerts();
+    }
+    showToast(`Emergency alert: ${type.toUpperCase()} on ${newAlert.bus}`, type === 'delay' ? 'warning' : 'error');
+}
+
+bindTripHistoryFilters();
+updateEmergencyBadge();
+setInterval(simulateEmergencyAlert, 45000);
 
 function renderPaymentDiscounts() {
     const container = document.getElementById('paymentDiscountsList');
