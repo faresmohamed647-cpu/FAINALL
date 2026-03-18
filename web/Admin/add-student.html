@@ -13,8 +13,8 @@
 <body>
   <div class="container"><div class="top"><a class="back-link" href="admin.html"><i class="fas fa-arrow-left"></i> Back To Admin</a></div><div class="card"><div class="card-header"><h1 id="pageTitle"></h1><p id="pageSubtitle"></p></div><form class="form" id="addForm"></form></div></div>
   <script src="../js/add-form.js"></script>
-  <script>
-    renderAddForm({ title: 'Add Student', subtitle: 'Create a new student profile.', fields: [
+    <script>
+    renderAddForm({ title: 'Add Student', subtitle: 'Create a new student profile.', entityType: 'student', fields: [
       { name: 'studentId', label: 'Student ID', required: true, width: 'half' },
       { name: 'fullName', label: 'Full Name', required: true, width: 'half' },
       { name: 'grade', label: 'Grade', required: true, width: 'half' },

@@ -46,6 +46,24 @@ function renderAddForm(config) {
 
   formNode.addEventListener('submit', (event) => {
     event.preventDefault();
+
+    // Collect form values (inputs/selects/textareas share `name` in our builder)
+    const entry = {};
+    formNode.querySelectorAll('input[name], select[name], textarea[name]').forEach((el) => {
+      entry[el.name] = el.value;
+    });
+
+    // Optional: persist certain entities for Admin to consume after redirect.
+    // This keeps QR/Activity Logs in `admin.html` in sync when adding a new student.
+    if (config?.entityType === 'student') {
+      try {
+        localStorage.setItem('pending_student', JSON.stringify(entry));
+      } catch (e) {
+        // If storage is blocked, we still continue with the normal redirect.
+        console.warn('Could not store pending_student:', e);
+      }
+    }
+
     alert(`${config.title || 'Entry'} saved successfully.`);
     window.location.href = 'admin.html';
   });

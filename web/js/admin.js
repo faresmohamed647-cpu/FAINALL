@@ -918,6 +918,9 @@ document.querySelector('.nav-link.logout').addEventListener('click', (e) => {
 // Initialize page state
 document.addEventListener('DOMContentLoaded', () => {
     
+    // If Add Student was submitted, Admin consumes it and can generate the QR instantly.
+    const newlyAddedStudent = consumePendingStudentForAdmin();
+    
     // Set dashboard as active by default
     const dashboardLink = document.querySelector('.nav-link[data-page="dashboard"]');
     const dashboardPage = document.getElementById('dashboard');
@@ -952,6 +955,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNotificationBadge();
     initSelectFilters();
     initStudentQrTools();
+
+    if (newlyAddedStudent) {
+        autoGenerateStudentQrForStudent(newlyAddedStudent);
+    }
 
     reapplyGlobalSearch();
     setSidebarState(!isMobileView());
@@ -1012,7 +1019,6 @@ function renderParents() {
     });
 
     reapplyGlobalSearch();
-    renderPendingDriverApplicantsForParents();
 }
 
 function renderPendingDriverApplicantsForParents() {
@@ -1128,6 +1134,7 @@ function renderDrivers() {
     });
 
     reapplyGlobalSearch();
+    renderPendingDriverApplicantsForParents();
 }
 
 function renderFinancials() {
@@ -2207,6 +2214,86 @@ function initStudentQrTools() {
     }
 }
 
+function consumePendingStudentForAdmin() {
+    let pendingStr = null;
+    try {
+        pendingStr = localStorage.getItem('pending_student');
+    } catch {
+        return null;
+    }
+    if (!pendingStr) return null;
+
+    let pending = null;
+    try {
+        pending = JSON.parse(pendingStr);
+    } catch {
+        try { localStorage.removeItem('pending_student'); } catch { /* ignore */ }
+        return null;
+    }
+
+    // Basic validation: form builder uses studentId/fullName/grade/school/parent/pickupLocation/dropoffLocation/status
+    if (!pending?.studentId || !pending?.fullName) {
+        try { localStorage.removeItem('pending_student'); } catch { /* ignore */ }
+        return null;
+    }
+
+    const nextId = studentsData.length ? Math.max(...studentsData.map(s => s.id)) + 1 : 1;
+    const newStudent = {
+        id: nextId,
+        studentId: String(pending.studentId),
+        name: String(pending.fullName),
+        grade: String(pending.grade || ''),
+        school: String(pending.school || ''),
+        parent: String(pending.parent || ''),
+        pickupLocation: String(pending.pickupLocation || ''),
+        dropoffLocation: String(pending.dropoffLocation || ''),
+        status: String(pending.status || 'active')
+    };
+
+    studentsData.unshift(newStudent); // show newest first
+    
+    // Track the creation event in Activity Logs
+    try {
+        appendActivityLog('create', 'Students', `Added student ${newStudent.name} (${newStudent.studentId})`);
+    } catch { /* ignore */ }
+
+    try { localStorage.removeItem('pending_student'); } catch { /* ignore */ }
+    return newStudent;
+}
+
+function autoGenerateStudentQrForStudent(newStudent) {
+    if (!newStudent) return;
+
+    const studentSelect = document.getElementById('qrStudentSelect');
+    const zoneSelect = document.getElementById('qrZoneSelect');
+    const tripTypeSelect = document.getElementById('qrTripType');
+    const noteInput = document.getElementById('qrNoteInput');
+
+    if (!studentSelect || !zoneSelect || !tripTypeSelect) return;
+
+    // Select newly added student (value matches studentsData.id)
+    studentSelect.value = String(newStudent.id);
+    studentSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Default zone/trip if user hasn't chosen anything yet
+    if (!zoneSelect.value) zoneSelect.value = 'zone_a';
+    if (!tripTypeSelect.value) tripTypeSelect.value = 'pickup';
+
+    if (noteInput && !noteInput.value) {
+        noteInput.value = newStudent.pickupLocation || '';
+    }
+
+    generateStudentQr();
+
+    // Ensure user lands on Activity Logs page where the QR builder is located.
+    if (typeof navigateTo === 'function') {
+        navigateTo('activity-logs');
+    }
+
+    const qrPreview = document.getElementById('studentQrContainer');
+    qrPreview?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function generateStudentQr() {
     const studentId = document.getElementById('qrStudentSelect')?.value;
     const zone = document.getElementById('qrZoneSelect')?.value;
@@ -2232,6 +2319,8 @@ function generateStudentQr() {
     const payloadObject = {
         studentId: student.studentId,
         name: student.name,
+        grade: student.grade,
+        parent: student.parent,
         school: student.school,
         zone: zone,
         tripType,
@@ -2247,6 +2336,12 @@ function generateStudentQr() {
     qrImage.alt = `QR code for ${student.name} - Zone: ${zone}`;
     qrContainer.classList.add('has-qr');
     payloadPreview.textContent = currentStudentQrPayload;
+
+    // Persist for QR.html student card
+    try {
+        localStorage.setItem('student_qr_last_payload', currentStudentQrPayload);
+        localStorage.setItem('student_qr_last_image_url', currentStudentQrImageUrl);
+    } catch { /* ignore */ }
 
     appendActivityLog('create', 'Student QR', `Generated QR for ${student.name} (Zone: ${zone}, ${tripType})`);
     renderActivityLogs();
