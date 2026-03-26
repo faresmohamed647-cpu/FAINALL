@@ -1,17 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --primary-color: #FF3E41;
-    --secondary-color: #5DADE2;
-    --success-color: #2ECC71;
-    --warning-color: #F39C12;
-    --danger-color: #E74C3C;
-    --info-color: #3498DB;
-    --dark-blue: #2C3E50;
-    --light-gray: #ECF0F1;
-    --text-dark: #2C3E50;
-    --text-light: #7F8C8D;
+    --primary-color: #1d4ed8;
+    --secondary-color: #1e3a8a;
+    --success-color: #059669;
+    --warning-color: #d97706;
+    --danger-color: #dc2626;
+    --info-color: #2563eb;
+    --dark-blue: #0f172a;
+    --light-gray: #eff6ff;
+    --text-dark: #0f172a;
+    --text-light: #64748b;
     --white: #FFFFFF;
+    --primary-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a8a 45%, #1d4ed8 100%);
+    --primary-gradient-hover: linear-gradient(135deg, #020617 0%, #1e40af 42%, #2563eb 100%);
+    --soft-gradient: linear-gradient(135deg, rgba(30, 58, 138, 0.12), rgba(29, 78, 216, 0.12));
 }
 
 @keyframes fadeIn {
@@ -75,7 +78,7 @@
 }
 
 body {
-    background: linear-gradient(to right, #e2e2e2, #FF3E41);
+    background: linear-gradient(135deg, #eaf2ff, #1d4ed8);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -143,7 +146,7 @@ body {
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #FF3E41;
+    color: var(--primary-color);
     font-size: 16px;
     pointer-events: none;
     transition: transform 0.2s ease, color 0.2s ease;
@@ -161,7 +164,7 @@ body {
 }
 
 .input-group:focus-within i {
-    color: #ff2a2d;
+    color: var(--secondary-color);
     animation: icon-bounce 0.35s ease;
 }
 
@@ -201,8 +204,8 @@ body {
 
 .password-checklist {
     margin-top: 8px;
-    background: #fff7f7;
-    border: 1px solid rgba(255, 62, 65, 0.2);
+    background: #f8fbff;
+    border: 1px solid rgba(29, 78, 216, 0.18);
     border-radius: 10px;
     padding: 10px 12px;
     display: none;
@@ -224,7 +227,7 @@ body {
 .strength-bar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #ff3e41, #ff8a00);
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
     transition: width 0.2s ease;
 }
 
@@ -257,7 +260,7 @@ body {
     content: "•";
     position: absolute;
     left: 0;
-    color: #ff3e41;
+    color: var(--primary-color);
 }
 
 .password-checklist li.met {
@@ -267,7 +270,7 @@ body {
 
 .password-checklist li.met::before {
     content: "✓";
-    color: #2ecc71;
+    color: var(--success-color);
 }
 
 textarea {
@@ -285,17 +288,34 @@ textarea {
 /* ================= BUTTONS ================= */
 
 .container button {
-    background-color: #FF3E41;
+    background: var(--primary-gradient);
     color: #fff;
-    font-size: 12px;
-    padding: 10px 35px;
+    font-size: 13px;
+    padding: 12px 38px;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     font-weight: 600;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     margin-top: 10px;
     cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.container button:hover {
+    background: var(--primary-gradient-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(29, 78, 216, 0.24);
+}
+
+.container form > button[type="submit"] {
+    width: 100%;
+    min-height: 48px;
+    font-size: 14px;
+    padding: 14px 22px;
+    border-radius: 14px;
 }
 
 button.hidden {
@@ -379,7 +399,7 @@ button.hidden {
 }
 
 .toggle {
-    background: linear-gradient(to right, #FF3E41, #FF3E41);
+    background: var(--primary-gradient);
     color: #fff;
     position: relative;
     left: -100%;
@@ -403,7 +423,7 @@ button.hidden {
 .existing-account button {
     display: inline-block;
     padding: 6px 16px;
-    background: var(--primary-color, #FF3E41);
+    background: var(--primary-gradient);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -412,10 +432,12 @@ button.hidden {
     text-decoration: none;
     cursor: pointer;
     transition: background 0.3s ease, transform 0.2s ease;
+    width: auto !important;
+    min-height: auto !important;
 }
 .existing-account a:hover,
 .existing-account button:hover {
-    background: rgba(255, 62, 65, 0.85);
+    background: var(--primary-gradient-hover);
     transform: translateY(-2px);
 }
 
@@ -424,7 +446,7 @@ button.hidden {
 #login,
 #register {
     padding: 14px 42px;
-    background: linear-gradient(135deg, #FF3E41, #FF6B6D);
+    background: var(--primary-gradient);
     color: #fff;
     border: 2px solid rgba(255, 255, 255, 0.25);
     border-radius: 999px;
@@ -434,21 +456,21 @@ button.hidden {
     text-transform: uppercase;
     cursor: pointer;
     margin-top: 20px;
-    box-shadow: 0 10px 24px rgba(255, 62, 65, 0.35);
+    box-shadow: 0 10px 24px rgba(29, 78, 216, 0.28);
     transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 .toggle-panel button:hover,
 #login:hover,
 #register:hover {
-    background: linear-gradient(135deg, #FF4E50, #FF7A7C);
+    background: var(--primary-gradient-hover);
     transform: translateY(-3px);
-    box-shadow: 0 16px 30px rgba(255, 62, 65, 0.45);
+    box-shadow: 0 16px 30px rgba(29, 78, 216, 0.34);
 }
 .toggle-panel button:active,
 #login:active,
 #register:active {
     transform: translateY(-1px);
-    box-shadow: 0 8px 16px rgba(255, 62, 65, 0.35);
+    box-shadow: 0 8px 16px rgba(29, 78, 216, 0.28);
 }
 .toggle-panel button:focus-visible,
 #login:focus-visible,

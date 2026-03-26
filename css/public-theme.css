@@ -1,0 +1,216 @@
+:root {
+    --public-primary: #1d4ed8;
+    --public-primary-dark: #1e3a8a;
+    --public-accent: #1e3a8a;
+    --public-bg: #f8fafc;
+    --public-bg-soft: #eef5ff;
+    --public-surface: #ffffff;
+    --public-text: #0f172a;
+    --public-muted: #64748b;
+    --public-border: rgba(148, 163, 184, 0.26);
+    --public-shadow: 0 16px 38px rgba(15, 23, 42, 0.08);
+    --public-shadow-hover: 0 20px 46px rgba(29, 78, 216, 0.16);
+    --public-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a8a 45%, #1d4ed8 100%);
+    --public-gradient-hover: linear-gradient(135deg, #020617 0%, #1e40af 42%, #2563eb 100%);
+}
+
+body {
+    background:
+        radial-gradient(circle at 12% 10%, rgba(30, 58, 138, 0.10) 0%, transparent 30%),
+        radial-gradient(circle at 88% 90%, rgba(29, 78, 216, 0.12) 0%, transparent 30%),
+        linear-gradient(135deg, var(--public-bg) 0%, var(--public-bg-soft) 100%);
+    color: var(--public-text);
+}
+
+.navbar.navbar-light {
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-top-color: var(--public-primary) !important;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08) !important;
+}
+
+.navbar-brand.bg-primary,
+.bg-primary,
+.btn.btn-primary {
+    background: var(--public-gradient) !important;
+    border-color: transparent !important;
+}
+
+.btn.btn-secondary {
+    background: var(--public-gradient) !important;
+    border-color: transparent !important;
+}
+
+.text-primary,
+.navbar-light .navbar-nav .nav-link:hover,
+.navbar-light .navbar-nav .nav-link.active {
+    color: var(--public-primary) !important;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: var(--public-text) !important;
+}
+
+.navbar .buttons a:first-child,
+.navbar .buttons a:last-child,
+.order-btn {
+    border-color: var(--public-primary) !important;
+    color: var(--public-primary) !important;
+}
+
+.navbar .buttons a:first-child:hover,
+.navbar .buttons a:last-child:hover,
+.order-btn:hover {
+    background: var(--public-gradient-hover) !important;
+    color: #fff !important;
+    box-shadow: 0 12px 28px rgba(29, 78, 216, 0.22);
+}
+
+.page-header {
+    background:
+        linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(30, 58, 138, 0.76)),
+        url("../img/carousel-1.jpg") center/cover no-repeat !important;
+}
+
+.service-item,
+.team-item,
+.testimonial-carousel .testimonial-item,
+.contact-page .contact-form,
+.bg-light,
+.calculator-card,
+.result-box,
+.offers,
+.modal,
+.container#container,
+.lang-menu,
+.payment--options button,
+.option,
+.payment label {
+    border-color: var(--public-border);
+    box-shadow: var(--public-shadow);
+}
+
+.service-item:hover,
+.team-item:hover,
+.testimonial-carousel .testimonial-item:hover,
+.payment--options button:hover,
+.option:hover {
+    box-shadow: var(--public-shadow-hover);
+}
+
+.footer {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+}
+
+.footer .btn.btn-social {
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+.footer .btn.btn-social:hover,
+.footer .btn.btn-link:hover {
+    color: #ffffff !important;
+}
+
+.owl-nav .owl-prev:hover,
+.owl-nav .owl-next:hover,
+.testimonial-carousel .owl-dot.active {
+    background: var(--public-gradient-hover) !important;
+}
+
+.contact-page .contact-form .form-control,
+.input_field,
+.input-group input,
+.input-group select,
+.input-group textarea,
+input[type="number"] {
+    border-color: var(--public-border) !important;
+}
+
+.contact-page .contact-form .form-control:focus,
+.input_field:focus,
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus,
+input[type="number"]:focus {
+    border-color: rgba(29, 78, 216, 0.58) !important;
+    box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.12) !important;
+}
+
+.input-group i,
+.lang-menu button,
+.big-number,
+.result-box h2,
+.offers h3,
+.calculator-card h1,
+.option strong {
+    color: var(--public-primary) !important;
+}
+
+.purchase--btn,
+.toggle,
+.strength-bar {
+    background: var(--public-gradient) !important;
+}
+
+.purchase--btn {
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 12px 28px rgba(29, 78, 216, 0.24);
+}
+
+.purchase--btn:hover,
+.btn:hover,
+.order-btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn,
+.purchase--btn,
+.order-btn,
+.service-item,
+.team-item,
+.testimonial-carousel .testimonial-item,
+.payment--options button,
+.option {
+    transition:
+        color 0.3s ease,
+        background 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease,
+        transform 0.3s ease;
+}
+
+.btn.btn-primary,
+.btn.btn-secondary,
+.purchase--btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn.btn-primary::after,
+.btn.btn-secondary::after,
+.purchase--btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 25%, rgba(255, 255, 255, 0.24) 50%, transparent 75%);
+    transform: translateX(-120%);
+    animation: publicShimmer 7s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes publicShimmer {
+    0% {
+        transform: translateX(-120%);
+    }
+    100% {
+        transform: translateX(120%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn.btn-primary::after,
+    .btn.btn-secondary::after,
+    .purchase--btn::after {
+        animation: none !important;
+    }
+}
